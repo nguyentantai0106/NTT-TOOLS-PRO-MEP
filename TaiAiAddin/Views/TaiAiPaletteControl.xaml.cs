@@ -148,10 +148,10 @@ namespace TaiAiAddin.Views
 
 
 
-            // 1. Nạp theme đã lưu trước đó của người dùng
-            int savedTheme = 6;
-            SaveThemeSetting(6);
-            ApplyTheme(6, true);
+            // 1. Nạp theme đã lưu trước đó của người dùng (Mặc định Theme 7: Tết Giáp Thìn)
+            int savedTheme = LoadThemeSetting();
+            if (savedTheme < 1 || (_themes != null && savedTheme > _themes.Length)) savedTheme = 7;
+            ApplyTheme(savedTheme, true);
 
             // 2. Nạp cấu hình thông số và thao tác từ lần sử dụng trước (User Settings Persistence)
             LoadPaletteSettings();
@@ -439,7 +439,8 @@ namespace TaiAiAddin.Views
 
         {
 
-            if (themeIndex < 1 || themeIndex > 6) themeIndex = 1;
+            int maxTheme = (_themes != null && _themes.Length > 0) ? _themes.Length : 7;
+            if (themeIndex < 1 || themeIndex > maxTheme) themeIndex = 1;
 
             _currentThemeIndex = themeIndex;
 
@@ -691,7 +692,8 @@ namespace TaiAiAddin.Views
 
                     int v;
 
-                    if (int.TryParse(s, out v) && v >= 1 && v <= 5) return v;
+                    int maxTheme = (_themes != null && _themes.Length > 0) ? _themes.Length : 7;
+                    if (int.TryParse(s, out v) && v >= 1 && v <= maxTheme) return v;
 
                 }
 
