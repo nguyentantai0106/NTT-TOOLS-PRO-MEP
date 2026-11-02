@@ -1,0 +1,576 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>NTT TOOLS - Nguyen Tan Tai</Author>
+  <LastAuthor>NTT TOOLS</LastAuthor>
+  <Created>2026-11-02T06:25:45Z</Created>
+  <Title>Bảng Tính Phụ Tải &amp; BOQ Tủ Điện MCC-HVAC-SAY-01</Title>
+ </DocumentProperties>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="Title">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="15" ss:Bold="1" ss:Color="#003366"/>
+  </Style>
+  <Style ss:ID="Subtitle">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Italic="1" ss:Color="#555555"/>
+  </Style>
+  <Style ss:ID="InfoLabel">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="9.5" ss:Bold="1" ss:Color="#333333"/>
+   <Interior ss:Color="#F0F4F8" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="InfoValue">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="9.5" ss:Bold="1" ss:Color="#005A9E"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="Header">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Bold="1" ss:Color="#FFFFFF"/>
+   <Interior ss:Color="#005A9E" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#003366"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#003366"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#003366"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#003366"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="SubHeader">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="9.5" ss:Bold="1" ss:Color="#FFFFFF"/>
+   <Interior ss:Color="#007ACC" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#003366"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#003366"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#003366"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#003366"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellCenter">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellLeft">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellNumber">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+   <NumberFormat ss:Format="#,##0.00"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellPhase3P">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Bold="1" ss:Color="#D32F2F"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellPhase1P">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Bold="1" ss:Color="#2E7D32"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellStarter">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="9.5" ss:Bold="1" ss:Color="#E65100"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellDropOk">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="9.5" ss:Color="#2E7D32"/>
+   <NumberFormat ss:Format="0.00%"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellDropExceeded">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="9.5" ss:Bold="1" ss:Color="#D32F2F"/>
+   <Interior ss:Color="#FFEBEE" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="0.00%"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D32F2F"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D32F2F"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D32F2F"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D32F2F"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="TotalRow">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="10.5" ss:Bold="1" ss:Color="#B71C1C"/>
+   <Interior ss:Color="#FFF3E0" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#B71C1C"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B71C1C"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="TotalRowNumber">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="10.5" ss:Bold="1" ss:Color="#B71C1C"/>
+   <NumberFormat ss:Format="#,##0.00"/>
+   <Interior ss:Color="#FFF3E0" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Double" ss:Weight="3" ss:Color="#B71C1C"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B71C1C"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D0D0D0"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="BOQCategory">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="10.5" ss:Bold="1" ss:Color="#003366"/>
+   <Interior ss:Color="#E3F2FD" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#003366"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#003366"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#003366"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#003366"/>
+   </Borders>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="MCC-HVAC-SAY-01">
+  <Table ss:DefaultRowHeight="20">
+   <Column ss:Width="35"/>
+   <Column ss:Width="180"/>
+   <Column ss:Width="55"/>
+   <Column ss:Width="60"/>
+   <Column ss:Width="75"/>
+   <Column ss:Width="60"/>
+   <Column ss:Width="60"/>
+   <Column ss:Width="60"/>
+   <Column ss:Width="70"/>
+   <Column ss:Width="130"/>
+   <Column ss:Width="220"/>
+   <Column ss:Width="55"/>
+   <Column ss:Width="65"/>
+   <Column ss:Width="75"/>
+   <Column ss:Width="75"/>
+   <Row ss:Height="30">
+    <Cell ss:MergeAcross="14" ss:StyleID="Title"><Data ss:Type="String">BẢNG TÍNH TOÁN PHỤ TẢI &amp; CHỌN CÁP/APTOMAT TỦ ĐIỆN MCC-HVAC-SAY-01</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:MergeAcross="14" ss:StyleID="Subtitle"><Data ss:Type="String">NTT TOOLS - Thiết kế / Shopdrawing / BKL • Tự động cân pha &amp; kiểm tra sụt áp TCVN</Data></Cell>
+   </Row>
+   <Row ss:Height="8"></Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="InfoLabel"><Data ss:Type="String">Tên Tủ Điện:</Data></Cell>
+    <Cell ss:StyleID="InfoValue"><Data ss:Type="String">MCC-HVAC-SAY-01</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="InfoLabel"><Data ss:Type="String">Tổng Công Suất Đặt (Pđặt):</Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="InfoValue"><Data ss:Type="String">42.80 kW</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="InfoLabel"><Data ss:Type="String">Aptomat Tổng (Main CB):</Data></Cell>
+    <Cell ss:MergeAcross="3" ss:StyleID="InfoValue"><Data ss:Type="String">MCCB 3P-25kA 125A</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="InfoLabel"><Data ss:Type="String">Hệ Số Đồng Thời (Kđt):</Data></Cell>
+    <Cell ss:StyleID="InfoValue"><Data ss:Type="String">1.00</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="InfoLabel"><Data ss:Type="String">Công Suất Tính Toán (Ptt):</Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="InfoValue"><Data ss:Type="String">42.80 kW</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="InfoLabel"><Data ss:Type="String">Cáp Nguồn Tổng (Main Cable):</Data></Cell>
+    <Cell ss:MergeAcross="3" ss:StyleID="InfoValue"><Data ss:Type="String">Cu/XLPE/PVC 4Cx50mm2 + E25mm2</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="InfoLabel"><Data ss:Type="String">Hệ Số Cosφ / Điện áp:</Data></Cell>
+    <Cell ss:StyleID="InfoValue"><Data ss:Type="String">0.80 / 380 V</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="InfoLabel"><Data ss:Type="String">Dòng Điện Tính Toán (Itt):</Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="InfoValue"><Data ss:Type="String">81.28 A</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="InfoLabel"><Data ss:Type="String">Tụ Bù / Dòng Ngắn Mạch:</Data></Cell>
+    <Cell ss:MergeAcross="3" ss:StyleID="InfoValue"><Data ss:Type="String">20 kVAR (2 Cấp) | Isc=28.9kA (50kA)</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="InfoLabel"><Data ss:Type="String">Phân Bổ Công Suất Pha:</Data></Cell>
+    <Cell ss:StyleID="InfoValue"><Data ss:Type="String">R:14.3 | Y:14.3 | B:14.3 kW</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="InfoLabel"><Data ss:Type="String">Độ Lệch Pha Cực Đại:</Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="InfoValue"><Data ss:Type="String">0.0 %</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="InfoLabel"><Data ss:Type="String">Kích Thước Vỏ Tủ Dự Kiến:</Data></Cell>
+    <Cell ss:MergeAcross="3" ss:StyleID="InfoValue"><Data ss:Type="String">Cao 1500 x Rộng 1100 x Sâu 300 mm</Data></Cell>
+   </Row>
+   <Row ss:Height="10"></Row>
+   <Row ss:Height="24">
+    <Cell ss:MergeDown="1" ss:StyleID="Header"><Data ss:Type="String">STT</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Header"><Data ss:Type="String">Tên Phụ Tải</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Header"><Data ss:Type="String">Số Mạch</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Header"><Data ss:Type="String">Pha</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Header"><Data ss:Type="String">Tổng P&#10;(kW)</Data></Cell>
+    <Cell ss:MergeAcross="2" ss:StyleID="Header"><Data ss:Type="String">Phân Bổ Pha (kW)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Header"><Data ss:Type="String">Dòng Itt&#10;(A)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Header"><Data ss:Type="String">Aptomat Bảo Vệ&#10;(MCCB / MCB)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Header"><Data ss:Type="String">Quy Cách Cáp Điện &amp; PE</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Header"><Data ss:Type="String">Dài L&#10;(m)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Header"><Data ss:Type="String">Sụt Áp&#10;ΔU %</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Header"><Data ss:Type="String">Khởi Động</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="Header"><Data ss:Type="String">Điều Khiển</Data></Cell>
+   </Row>
+   <Row ss:Height="18">
+    <Cell ss:Index="6" ss:StyleID="SubHeader"><Data ss:Type="String">Pha R</Data></Cell>
+    <Cell ss:StyleID="SubHeader"><Data ss:Type="String">Pha Y</Data></Cell>
+    <Cell ss:StyleID="SubHeader"><Data ss:Type="String">Pha B</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">CLP-SAY-01</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">C01</Data></Cell>
+    <Cell ss:StyleID="CellPhase3P"><Data ss:Type="String">3 Pha</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">4.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">8.55</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">MCB 3P-6kA 16A</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cu/PVC/PVC 4C-2.5mm2 + (E) Cu/PVC 1C-2.5mm2</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">48</Data></Cell>
+    <Cell ss:StyleID="CellDropOk"><Data ss:Type="Number">0.0134</Data></Cell>
+    <Cell ss:StyleID="CellStarter"><Data ss:Type="String">DOL</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">PLC</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">CLP-SAY-02</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">C02</Data></Cell>
+    <Cell ss:StyleID="CellPhase3P"><Data ss:Type="String">3 Pha</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">4.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">8.55</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">MCB 3P-6kA 16A</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cu/PVC/PVC 4C-2.5mm2 + (E) Cu/PVC 1C-2.5mm2</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">50</Data></Cell>
+    <Cell ss:StyleID="CellDropOk"><Data ss:Type="Number">0.0140</Data></Cell>
+    <Cell ss:StyleID="CellStarter"><Data ss:Type="String">DOL</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">PLC</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">CLP-SAY-03</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">C03</Data></Cell>
+    <Cell ss:StyleID="CellPhase3P"><Data ss:Type="String">3 Pha</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">4.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">8.55</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">MCB 3P-6kA 16A</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cu/PVC/PVC 4C-2.5mm2 + (E) Cu/PVC 1C-2.5mm2</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">52</Data></Cell>
+    <Cell ss:StyleID="CellDropOk"><Data ss:Type="Number">0.0145</Data></Cell>
+    <Cell ss:StyleID="CellStarter"><Data ss:Type="String">DOL</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">PLC</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">CLP-XAY-01</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">C04</Data></Cell>
+    <Cell ss:StyleID="CellPhase3P"><Data ss:Type="String">3 Pha</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">3.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.17</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.17</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.17</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">6.65</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">MCB 3P-6kA 16A</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cu/PVC/PVC 4C-2.5mm2 + (E) Cu/PVC 1C-2.5mm2</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">56</Data></Cell>
+    <Cell ss:StyleID="CellDropOk"><Data ss:Type="Number">0.0122</Data></Cell>
+    <Cell ss:StyleID="CellStarter"><Data ss:Type="String">DOL</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">PLC</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">5</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">EAF-SAY-01</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">C05</Data></Cell>
+    <Cell ss:StyleID="CellPhase3P"><Data ss:Type="String">3 Pha</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">7.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">2.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">2.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">2.50</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">14.24</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">MCB 3P-6kA 20A</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cu/PVC/PVC 4C-2.5mm2 + (E) Cu/PVC 1C-2.5mm2</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">14</Data></Cell>
+    <Cell ss:StyleID="CellDropOk"><Data ss:Type="Number">0.0065</Data></Cell>
+    <Cell ss:StyleID="CellStarter"><Data ss:Type="String">DOL</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">TIMER</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">6</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">FAF-SAY-01</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">C06</Data></Cell>
+    <Cell ss:StyleID="CellPhase3P"><Data ss:Type="String">3 Pha</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">0.55</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">0.18</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">0.18</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">0.18</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.04</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">MCB 3P-6kA 16A</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cu/PVC/PVC 4C-2.5mm2 + (E) Cu/PVC 1C-2.5mm2</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">24</Data></Cell>
+    <Cell ss:StyleID="CellDropOk"><Data ss:Type="Number">0.0008</Data></Cell>
+    <Cell ss:StyleID="CellStarter"><Data ss:Type="String">DOL</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">TIMER</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">7</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">EAF-XAY-01</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">C07</Data></Cell>
+    <Cell ss:StyleID="CellPhase3P"><Data ss:Type="String">3 Pha</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">0.55</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">0.18</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">0.18</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">0.18</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">1.04</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">MCB 3P-6kA 16A</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cu/PVC/PVC 4C-2.5mm2 + (E) Cu/PVC 1C-2.5mm2</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">62</Data></Cell>
+    <Cell ss:StyleID="CellDropOk"><Data ss:Type="Number">0.0021</Data></Cell>
+    <Cell ss:StyleID="CellStarter"><Data ss:Type="String">DOL</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">TIMER</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">8</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">PAU-SAY-01</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">C08</Data></Cell>
+    <Cell ss:StyleID="CellPhase3P"><Data ss:Type="String">3 Pha</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">2.20</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">0.73</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">0.73</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">0.73</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">4.18</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">MCB 3P-6kA 16A</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cu/PVC/PVC 4C-2.5mm2 + (E) Cu/PVC 1C-2.5mm2</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="CellDropOk"><Data ss:Type="Number">0.0020</Data></Cell>
+    <Cell ss:StyleID="CellStarter"><Data ss:Type="String">DOL</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">PLC</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">9</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">ODU-SAY-01</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">C09</Data></Cell>
+    <Cell ss:StyleID="CellPhase3P"><Data ss:Type="String">3 Pha</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">15.00</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">5.00</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">5.00</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">5.00</Data></Cell>
+    <Cell ss:StyleID="CellNumber"><Data ss:Type="Number">28.49</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">MCCB 3P-10kA 40A</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cu/XLPE/PVC 4C-10mm2 + (E) Cu/PVC 1C-10mm2</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:StyleID="CellDropOk"><Data ss:Type="Number">0.0048</Data></Cell>
+    <Cell ss:StyleID="CellStarter"><Data ss:Type="String">DOL</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">PLC</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:MergeAcross="3" ss:StyleID="TotalRow"><Data ss:Type="String">TỔNG CỘNG CÔNG SUẤT (kW)</Data></Cell>
+    <Cell ss:StyleID="TotalRowNumber"><Data ss:Type="Number">42.80</Data></Cell>
+    <Cell ss:StyleID="TotalRowNumber"><Data ss:Type="Number">14.27</Data></Cell>
+    <Cell ss:StyleID="TotalRowNumber"><Data ss:Type="Number">14.27</Data></Cell>
+    <Cell ss:StyleID="TotalRowNumber"><Data ss:Type="Number">14.27</Data></Cell>
+    <Cell ss:StyleID="TotalRowNumber"><Data ss:Type="Number">81.28</Data></Cell>
+    <Cell ss:MergeAcross="5" ss:StyleID="TotalRow"><Data ss:Type="String">HỆ THỐNG ĐẠT CHUẨN CÂN BẰNG TẢI &amp; AN TOÀN SỤT ÁP</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+ <Worksheet ss:Name="Bóc Tách Khối Lượng BOQ">
+  <Table ss:DefaultRowHeight="20">
+   <Column ss:Width="40"/>
+   <Column ss:Width="220"/>
+   <Column ss:Width="240"/>
+   <Column ss:Width="60"/>
+   <Column ss:Width="70"/>
+   <Column ss:Width="120"/>
+   <Row ss:Height="28">
+    <Cell ss:MergeAcross="5" ss:StyleID="Title"><Data ss:Type="String">BẢNG BÓC TÁCH KHỐI LƯỢNG VẬT TƯ THIẾT BỊ (BOQ) - TỦ ĐIỆN MCC-HVAC-SAY-01</Data></Cell>
+   </Row>
+   <Row ss:Height="8"></Row>
+   <Row ss:Height="24">
+    <Cell ss:StyleID="Header"><Data ss:Type="String">STT</Data></Cell>
+    <Cell ss:StyleID="Header"><Data ss:Type="String">Danh Mục Vật Tư / Thiết Bị</Data></Cell>
+    <Cell ss:StyleID="Header"><Data ss:Type="String">Quy Cách / Thông Số Kỹ Thuật</Data></Cell>
+    <Cell ss:StyleID="Header"><Data ss:Type="String">ĐVT</Data></Cell>
+    <Cell ss:StyleID="Header"><Data ss:Type="String">Số Lượng</Data></Cell>
+    <Cell ss:StyleID="Header"><Data ss:Type="String">Ghi Chú</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:MergeAcross="5" ss:StyleID="BOQCategory"><Data ss:Type="String">I. THIẾT BỊ ĐÓNG CẮT (SWITCHGEAR)</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Aptomat Tổng Tủ Điện</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">MCCB 3P-25kA 125A</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Bộ</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Aptomat chính Incomer</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Aptomat Phân Phối Nhánh</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">MCB 3P-6kA 16A</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Cái</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">7</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Lộ phụ tải</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Aptomat Phân Phối Nhánh</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">MCB 3P-6kA 20A</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Cái</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Lộ phụ tải</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Aptomat Phân Phối Nhánh</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">MCCB 3P-10kA 40A</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Cái</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Lộ phụ tải</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:MergeAcross="5" ss:StyleID="BOQCategory"><Data ss:Type="String">II. BỘ KHỞI ĐỘNG ĐỘNG CƠ &amp; ĐIỀU KHIỂN</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">5</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Bộ Khởi Động Trực Tiếp (DOL)</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Contactor + Rơ le nhiệt bảo vệ quá tải</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Bộ</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">9</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Khởi động bơm/quạt</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:MergeAcross="5" ss:StyleID="BOQCategory"><Data ss:Type="String">III. THIẾT BỊ ĐO LƯỜNG &amp; PHỤ TRỢ TỦ ĐIỆN</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">6</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Đèn Báo Pha (R - Y - B)</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Đèn LED 220VAC màu Đỏ, Vàng, Xanh</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Bộ (3 cái)</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Báo nguồn mặt tủ</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">7</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Biến Dòng Đo Lường (MCT)</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Biến dòng đo lường tỷ số phù hợp dòng tủ /5A</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Bộ (3 cái)</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Đo dòng 3 pha</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">8</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Đồng Hồ Đa Năng Điện Tử (PM)</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Power Meter kỹ thuật số đo V, A, Hz, kW, Cosφ</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Cái</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Gắn mặt tủ</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">9</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Rơ Le Bảo Vệ (OV/UV/EF/OC)</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Bảo vệ quá áp, thấp áp, chạm đất, quá dòng</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Bộ</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Bảo vệ hệ thống</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:MergeAcross="5" ss:StyleID="BOQCategory"><Data ss:Type="String">IV. DÂY CÁP ĐIỆN VÀ DẪN NGUỒN</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">10</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cáp Điện Xuất Lộ Phụ Tải</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cu/PVC/PVC 4C-2.5mm2 + (E) Cu/PVC 1C-2.5mm2</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Mét</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">321</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Tuyến cáp nhánh</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cáp Điện Xuất Lộ Phụ Tải</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Cu/XLPE/PVC 4C-10mm2 + (E) Cu/PVC 1C-10mm2</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Mét</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Tuyến cáp nhánh</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:MergeAcross="5" ss:StyleID="BOQCategory"><Data ss:Type="String">V. VỎ TỦ ĐIỆN &amp; PHỤ KIỆN LẮP RÁP</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Vỏ Tủ Điện Sơn Tĩnh Điện (Trong Nhà)</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Kích thước 1500 x 1100 x 300 mm, tole dày 1.5 - 2.0mm</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Cái</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">IP42/IP54 có khóa cánh tủ</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">13</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Hệ Thống Thanh Cái Đồng Chính (Busbar)</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Đồng đỏ nguyên chất 99.9% mạ thiếc, chịu dòng 81A</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="String">Hệ</Data></Cell>
+    <Cell ss:StyleID="CellCenter"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="CellLeft"><Data ss:Type="String">Bao gồm sứ đỡ thanh cái</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+</Workbook>

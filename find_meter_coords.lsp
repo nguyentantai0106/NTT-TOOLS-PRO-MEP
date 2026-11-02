@@ -1,0 +1,17 @@
+(setq ent (entnext))
+(while ent
+  (setq elist (entget ent))
+  (setq etype (cdr (assoc 0 elist)))
+  (if (= etype "TEXT")
+    (progn
+      (setq pt (cdr (assoc 10 elist)))
+      (setq txt (cdr (assoc 1 elist)))
+      (if (or (vl-string-search "PM" txt) (vl-string-search "FUSE" txt) (vl-string-search "ĐÈN" txt) (vl-string-search "BÁO" txt))
+        (princ (strcat "\nFOUND TEXT: [" txt "] at (" (rtos (car pt) 2 2) "," (rtos (cadr pt) 2 2) ")"))
+      )
+    )
+  )
+  (setq ent (entnext ent))
+)
+(princ "\n---ALL DONE---")
+(command "QUIT" "_Y")

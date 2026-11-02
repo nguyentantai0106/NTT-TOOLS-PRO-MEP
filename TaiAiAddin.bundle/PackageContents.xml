@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage SchemaVersion="1.0"
+                    AutodeskProduct="AutoCAD"
+                    ProductType="Application"
+                    Name="NTT TOOLS - Thiết kế / Shopdrawing / BKL"
+                    AppVersion="1.0.0"
+                    Description="Bộ công cụ thiết kế, shopdrawing, bóc tách khối lượng và sơ đồ nguyên lý điện cho AutoCAD"
+                    Author="Nguyen Tan Tai"
+                    ProductCode="{E8B4F9A1-7A2D-4581-9C3E-123456789ABC}"
+                    UpgradeCode="{F9C5E8B2-8B3E-4692-AD4F-987654321DEF}">
+  
+  <CompanyDetails Name="Nguyen Tan Tai" />
+  
+  <!-- Cấu hình nạp cho AutoCAD 2020 - 2024 nền tảng 64-bit (.NET Framework 4.8) -->
+  <Components Description="AutoCAD 2020-2024 x64">
+    <RuntimeRequirements OS="Win64" Platform="AutoCAD*" SeriesMin="R23.0" SeriesMax="R24.3" />
+    <ComponentEntry AppName="TaiAiAddin"
+                    Version="1.0.0"
+                    ModuleName="./Contents/Windows/TaiAiAddin.dll"
+                    AppDescription="NTT TOOLS - AutoCAD Engineering Addin"
+                    LoadOnAutoCADStartup="True"
+                    LoadOnCommandInvocation="True">
+      <Commands GroupName="NTT_TOOLS">
+        <Command Local="NTT" Global="NTT" />
+        <Command Local="TaiAi" Global="TaiAi" />
+        <Command Local="NTTSLD" Global="NTTSLD" />
+        <Command Local="TaiAiSLD" Global="TaiAiSLD" />
+        <Command Local="NTTRISER" Global="NTTRISER" />
+        <Command Local="NTTTD" Global="NTTTD" />
+        <Command Local="NTTDUCT" Global="NTTDUCT" />
+        <Command Local="NTT_DUCT" Global="NTT_DUCT" />
+        <Command Local="NTTGAS" Global="NTTGAS" />
+        <Command Local="NTT_GAS" Global="NTT_GAS" />
+        <Command Local="NTTDRAIN" Global="NTTDRAIN" />
+        <Command Local="NTT_DRAIN" Global="NTT_DRAIN" />
+        <Command Local="NTTTMC" Global="NTTTMC" />
+        <Command Local="NTT_TMC" Global="NTT_TMC" />
+        <Command Local="NTTTMCROUTE" Global="NTTTMCROUTE" />
+        <Command Local="NTT_TMC_ROUTE" Global="NTT_TMC_ROUTE" />
+        <Command Local="NTTTMCBOM" Global="NTTTMCBOM" />
+        <Command Local="NTT_TMC_BOM" Global="NTT_TMC_BOM" />
+      </Commands>
+    </ComponentEntry>
+  </Components>
+</ApplicationPackage>

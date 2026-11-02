@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Segoe UI" ss:Size="10"/></Style>
+  <Style ss:ID="Header"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:FontName="Segoe UI" ss:Size="10" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#005A9E" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="Center"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>
+  <Style ss:ID="Right"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>
+ </Styles>
+ <Worksheet ss:Name="DanhSachPhuTai">
+  <Table>
+   <Column ss:Width="40"/>
+   <Column ss:Width="180"/>
+   <Column ss:Width="80"/>
+   <Column ss:Width="90"/>
+   <Column ss:Width="90"/>
+   <Column ss:Width="110"/>
+   <Column ss:Width="110"/>
+   <Row ss:Height="24">
+    <Cell ss:StyleID="Header"><Data ss:Type="String">STT</Data></Cell>
+    <Cell ss:StyleID="Header"><Data ss:Type="String">Tên Phụ Tải</Data></Cell>
+    <Cell ss:StyleID="Header"><Data ss:Type="String">Số Pha (3P/1P)</Data></Cell>
+    <Cell ss:StyleID="Header"><Data ss:Type="String">Công Suất (kW)</Data></Cell>
+    <Cell ss:StyleID="Header"><Data ss:Type="String">Chiều Dài (m)</Data></Cell>
+    <Cell ss:StyleID="Header"><Data ss:Type="String">Khởi Động (DOL/Y-D/VFD/SS)</Data></Cell>
+    <Cell ss:StyleID="Header"><Data ss:Type="String">Điều Khiển (HOA/FS/PS)</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="Center"><Data ss:Type="Number">1</Data></Cell>
+    <Cell><Data ss:Type="String">BƠM NƯỚC LẠNH CHWP-01</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">3P</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">22.0</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">35</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">Y-D</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">HOA</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="Center"><Data ss:Type="Number">2</Data></Cell>
+    <Cell><Data ss:Type="String">BƠM NƯỚC LẠNH CHWP-02</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">3P</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">22.0</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">35</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">Y-D</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">HOA</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="Center"><Data ss:Type="Number">3</Data></Cell>
+    <Cell><Data ss:Type="String">QUẠT THÔNG GIÓ FAN-01</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">3P</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">15.0</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">25</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">DOL</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">HOA</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="Center"><Data ss:Type="Number">4</Data></Cell>
+    <Cell><Data ss:Type="String">BƠM TĂNG ÁP BOOSTER-01</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">3P</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">11.0</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">40</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">VFD</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">PS</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="Center"><Data ss:Type="Number">5</Data></Cell>
+    <Cell><Data ss:Type="String">CHIẾU SÁNG PHÒNG MÁY</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">1P</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">2.5</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">30</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">-</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">HOA</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="Center"><Data ss:Type="Number">6</Data></Cell>
+    <Cell><Data ss:Type="String">Ổ CẮM KỸ THUẬT</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">1P</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">3.0</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">-</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">-</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="Center"><Data ss:Type="Number">7</Data></Cell>
+    <Cell><Data ss:Type="String">BƠM NƯỚC THẢI SUMP-01</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">3P</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">7.5</Data></Cell>
+    <Cell ss:StyleID="Right"><Data ss:Type="Number">30</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">DOL</Data></Cell>
+    <Cell ss:StyleID="Center"><Data ss:Type="String">FS</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+</Workbook>

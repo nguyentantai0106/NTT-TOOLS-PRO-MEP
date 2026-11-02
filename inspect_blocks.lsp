@@ -1,0 +1,15 @@
+(setq ent (entnext))
+(while ent
+  (setq elist (entget ent))
+  (if (= (cdr (assoc 0 elist)) "INSERT")
+    (progn
+      (setq bn (cdr (assoc 2 elist)))
+      (setq pt (cdr (assoc 10 elist)))
+      (setq sx (cdr (assoc 41 elist)))
+      (princ (strcat "\nBLOCK: [" bn "] at (" (rtos (car pt) 2 3) "," (rtos (cadr pt) 2 3) ") Scale=" (rtos sx 2 4)))
+    )
+  )
+  (setq ent (entnext ent))
+)
+(princ "\n---ALL BLOCKS DONE---")
+(command "QUIT" "_Y")

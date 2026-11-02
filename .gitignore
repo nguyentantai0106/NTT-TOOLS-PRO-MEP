@@ -1,0 +1,39 @@
+## --- Visual Studio & .NET Build Artifacts ---
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## --- Compiled Binaries & Assemblies ---
+*.exe
+*.dll
+*.pdb
+
+## --- AutoCAD Locks & Backup Files ---
+*.bak
+*.old
+*.dwl
+*.dwl2
+*.dcl
+*.err
+*.tmp
+
+## --- Python Virtual Environments & Caches ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+.pytest_cache/
+
+## --- Temporary Scratch Scripts, Logs & Dumps ---
+scratch/
+*.txt
+*.scr
+*.log
