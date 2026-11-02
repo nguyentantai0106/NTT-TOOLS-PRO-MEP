@@ -149,8 +149,9 @@ namespace TaiAiAddin.Views
 
 
             // 1. Nạp theme đã lưu trước đó của người dùng
-            int savedTheme = LoadThemeSetting();
-            ApplyTheme(savedTheme, false);
+            int savedTheme = 6;
+            SaveThemeSetting(6);
+            ApplyTheme(6, true);
 
             // 2. Nạp cấu hình thông số và thao tác từ lần sử dụng trước (User Settings Persistence)
             LoadPaletteSettings();
@@ -354,6 +355,24 @@ namespace TaiAiAddin.Views
 
                     LogoTextBg = "#1F2228"
 
+                },
+
+                // Theme 6: Giáng Sinh An Lành (Noel Christmas Magic)
+                new ThemeDefinition
+                {
+                    Name = "Giáng Sinh An Lành (Noel)",
+                    BgPrimary = "#180D10",
+                    BgSurface = "#25141A",
+                    BgSubCard = "#1E0F14",
+                    BgHover = "#381923",
+                    BorderDivider = "#4A222F",
+                    AccentCyan = "#FF334B",
+                    AccentAmber = "#FFD700",
+                    TextPrimary = "#FFF5F5",
+                    TextSecondary = "#D4A5B0",
+                    Grad1 = "#FF334B",
+                    Grad2 = "#00E676",
+                    LogoTextBg = "#180D10"
                 }
 
             };
@@ -402,7 +421,7 @@ namespace TaiAiAddin.Views
 
         {
 
-            if (themeIndex < 1 || themeIndex > 5) themeIndex = 1;
+            if (themeIndex < 1 || themeIndex > 6) themeIndex = 1;
 
             _currentThemeIndex = themeIndex;
 
@@ -496,11 +515,11 @@ namespace TaiAiAddin.Views
 
         {
 
-            Border[] cards = new Border[] { cardTheme1, cardTheme2, cardTheme3, cardTheme4, cardTheme5 };
+            Border[] cards = new Border[] { cardTheme1, cardTheme2, cardTheme3, cardTheme4, cardTheme5, cardTheme6 };
 
-            Border[] badges = new Border[] { badgeTheme1, badgeTheme2, badgeTheme3, badgeTheme4, badgeTheme5 };
+            Border[] badges = new Border[] { badgeTheme1, badgeTheme2, badgeTheme3, badgeTheme4, badgeTheme5, badgeTheme6 };
 
-            Button[] buttons = new Button[] { btnApplyTheme1, btnApplyTheme2, btnApplyTheme3, btnApplyTheme4, btnApplyTheme5 };
+            Button[] buttons = new Button[] { btnApplyTheme1, btnApplyTheme2, btnApplyTheme3, btnApplyTheme4, btnApplyTheme5, btnApplyTheme6 };
 
 
 
@@ -510,7 +529,7 @@ namespace TaiAiAddin.Views
 
 
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < cards.Length; i++)
 
             {
 
@@ -558,6 +577,8 @@ namespace TaiAiAddin.Views
 
         private void BtnApplyTheme5_Click(object sender, RoutedEventArgs e) { ApplyTheme(5); }
 
+        private void BtnApplyTheme6_Click(object sender, RoutedEventArgs e) { ApplyTheme(6); }
+
 
 
         private void CardTheme1_MouseDown(object sender, MouseButtonEventArgs e) { ApplyTheme(1); }
@@ -569,6 +590,8 @@ namespace TaiAiAddin.Views
         private void CardTheme4_MouseDown(object sender, MouseButtonEventArgs e) { ApplyTheme(4); }
 
         private void CardTheme5_MouseDown(object sender, MouseButtonEventArgs e) { ApplyTheme(5); }
+
+        private void CardTheme6_MouseDown(object sender, MouseButtonEventArgs e) { ApplyTheme(6); }
 
 
 
