@@ -167,25 +167,33 @@ namespace TaiAiAddin.Services
 
         private static async void HandleRequestAsync(HttpListenerContext context)
         {
-            HttpListenerRequest req = context.Request;
-            HttpListenerResponse res = context.Response;
-
-            // Header CORS để các client web/scripts gọi mượt mà
-            res.Headers.Add("Access-Control-Allow-Origin", "*");
-            res.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-            res.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-            if (req.HttpMethod == "OPTIONS")
-            {
-                res.StatusCode = 200;
-                res.Close();
-                return;
-            }
-
-            string rawUrl = req.RawUrl != null ? req.RawUrl.ToLowerInvariant() : "";
+            if (context == null) return;
 
             try
             {
+                HttpListenerRequest req = context.Request;
+                HttpListenerResponse res = context.Response;
+
+                if (req == null || res == null) return;
+
+                // Header CORS để các client web/scripts gọi mượt mà
+                try
+                {
+                    res.Headers.Add("Access-Control-Allow-Origin", "*");
+                    res.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+                    res.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                }
+                catch { }
+
+                if (req.HttpMethod == "OPTIONS")
+                {
+                    res.StatusCode = 200;
+                    res.Close();
+                    return;
+                }
+
+                string rawUrl = req.RawUrl != null ? req.RawUrl.ToLowerInvariant() : "";
+
                 // 1. ENDPOINT: GET /api/status (Kiểm tra trạng thái)
                 if (req.HttpMethod == "GET" && (rawUrl == "/api/status" || rawUrl == "/api/status/"))
                 {
@@ -193,7 +201,7 @@ namespace TaiAiAddin.Services
                     try
                     {
                         Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
-                        docName = doc != null ? doc.Name : null;
+                        if (doc != null) docName = doc.Name;
                     }
                     catch { }
 
@@ -251,13 +259,19 @@ namespace TaiAiAddin.Services
                 // 5. ENDPOINT: POST /api/action (Thực thi các lệnh CAD)
                 if (req.HttpMethod == "POST" && (rawUrl == "/api/action" || rawUrl == "/api/action/"))
                 {
-                    string body;
+                    string body = "";
                     using (StreamReader reader = new StreamReader(req.InputStream, req.ContentEncoding))
                     {
                         body = await reader.ReadToEndAsync();
                     }
 
-                    Dictionary<string, object> requestDict = _jsonSerializer.Deserialize<Dictionary<string, object>>(body);
+                    Dictionary<string, object> requestDict = null;
+                    try
+                    {
+                        requestDict = _jsonSerializer.Deserialize<Dictionary<string, object>>(body);
+                    }
+                    catch { }
+
                     string action = requestDict != null && requestDict.ContainsKey("action") ? requestDict["action"].ToString() : "";
                     Dictionary<string, object> parameters = null;
                     if (requestDict != null && requestDict.ContainsKey("params"))
@@ -298,39 +312,54 @@ namespace TaiAiAddin.Services
             }
             catch (Exception ex)
             {
-                Dictionary<string, object> err500 = new Dictionary<string, object>();
-                err500.Add("success", false);
-                err500.Add("error", ex.Message);
-                SendJsonResponse(res, 500, err500);
+                try
+                {
+                    if (context != null && context.Response != null)
+                    {
+                        Dictionary<string, object> err500 = new Dictionary<string, object>();
+                        err500.Add("success", false);
+                        err500.Add("error", ex.Message);
+                        SendJsonResponse(context.Response, 500, err500);
+                    }
+                }
+                catch { }
             }
         }
 
         private static void OnAutoCadIdle(object sender, EventArgs e)
         {
             // Xử lý các task tồn đọng trên Main STA Thread
-            QueuedTask task;
-            while (_taskQueue.TryDequeue(out task))
+            try
             {
-                try
+                QueuedTask task;
+                while (_taskQueue != null && _taskQueue.TryDequeue(out task))
                 {
-                    Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
-                    if (doc == null)
-                    {
-                        task.Tcs.TrySetException(new InvalidOperationException("Không có bản vẽ AutoCAD nào đang mở."));
-                        continue;
-                    }
+                    if (task == null || task.Action == null) continue;
 
-                    using (doc.LockDocument())
+                    try
                     {
-                        object res = task.Action();
-                        task.Tcs.TrySetResult(res);
+                        Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
+                        if (doc != null)
+                        {
+                            using (doc.LockDocument())
+                            {
+                                object res = task.Action();
+                                if (task.Tcs != null) task.Tcs.TrySetResult(res);
+                            }
+                        }
+                        else
+                        {
+                            object res = task.Action();
+                            if (task.Tcs != null) task.Tcs.TrySetResult(res);
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    task.Tcs.TrySetException(ex);
+                    catch (Exception ex)
+                    {
+                        if (task.Tcs != null) task.Tcs.TrySetException(ex);
+                    }
                 }
             }
+            catch { }
         }
 
         /// <summary>
@@ -575,6 +604,7 @@ namespace TaiAiAddin.Services
         {
             try
             {
+                if (res == null) return;
                 res.StatusCode = statusCode;
                 res.ContentType = "application/json; charset=utf-8";
 
@@ -591,11 +621,23 @@ namespace TaiAiAddin.Services
         {
             try
             {
-                Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
-                if (doc != null && doc.Editor != null)
+                _taskQueue.Enqueue(new QueuedTask
                 {
-                    doc.Editor.WriteMessage(msg);
-                }
+                    Action = () =>
+                    {
+                        try
+                        {
+                            Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
+                            if (doc != null && doc.Editor != null)
+                            {
+                                doc.Editor.WriteMessage(msg);
+                            }
+                        }
+                        catch { }
+                        return null;
+                    },
+                    Tcs = new TaskCompletionSource<object>()
+                });
             }
             catch { }
         }

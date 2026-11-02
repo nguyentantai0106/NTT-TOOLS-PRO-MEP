@@ -3783,7 +3783,18 @@ private void BtnInsertHvacBlock_Click(object sender, RoutedEventArgs e)
                 UpdateMcpStatusUi(McpBridgeService.IsAuthorized);
                 McpBridgeService.OnAuthorizationChanged += (isAuth) =>
                 {
-                    Dispatcher.Invoke(new Action(() => UpdateMcpStatusUi(isAuth)));
+                    try
+                    {
+                        var disp = this.Dispatcher;
+                        if (disp != null)
+                        {
+                            disp.BeginInvoke(new Action(() =>
+                            {
+                                try { UpdateMcpStatusUi(isAuth); } catch { }
+                            }));
+                        }
+                    }
+                    catch { }
                 };
             }
             catch { }
