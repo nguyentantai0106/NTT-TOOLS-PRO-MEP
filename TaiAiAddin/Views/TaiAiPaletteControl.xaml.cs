@@ -373,6 +373,24 @@ namespace TaiAiAddin.Views
                     Grad1 = "#FF334B",
                     Grad2 = "#00E676",
                     LogoTextBg = "#180D10"
+                },
+
+                // Theme 7: Tết Giáp Thìn (Xuân May Mắn)
+                new ThemeDefinition
+                {
+                    Name = "Tết Giáp Thìn (Xuân May Mắn)",
+                    BgPrimary = "#1A0A0C",
+                    BgSurface = "#261014",
+                    BgSubCard = "#1F0C10",
+                    BgHover = "#38171E",
+                    BorderDivider = "#52232B",
+                    AccentCyan = "#FFD700",
+                    AccentAmber = "#FF2A4B",
+                    TextPrimary = "#FFF8F0",
+                    TextSecondary = "#D4B8B2",
+                    Grad1 = "#FFD700",
+                    Grad2 = "#FF2A4B",
+                    LogoTextBg = "#1A0A0C"
                 }
 
             };
@@ -515,11 +533,11 @@ namespace TaiAiAddin.Views
 
         {
 
-            Border[] cards = new Border[] { cardTheme1, cardTheme2, cardTheme3, cardTheme4, cardTheme5, cardTheme6 };
+            Border[] cards = new Border[] { cardTheme1, cardTheme2, cardTheme3, cardTheme4, cardTheme5, cardTheme6, cardTheme7 };
 
-            Border[] badges = new Border[] { badgeTheme1, badgeTheme2, badgeTheme3, badgeTheme4, badgeTheme5, badgeTheme6 };
+            Border[] badges = new Border[] { badgeTheme1, badgeTheme2, badgeTheme3, badgeTheme4, badgeTheme5, badgeTheme6, badgeTheme7 };
 
-            Button[] buttons = new Button[] { btnApplyTheme1, btnApplyTheme2, btnApplyTheme3, btnApplyTheme4, btnApplyTheme5, btnApplyTheme6 };
+            Button[] buttons = new Button[] { btnApplyTheme1, btnApplyTheme2, btnApplyTheme3, btnApplyTheme4, btnApplyTheme5, btnApplyTheme6, btnApplyTheme7 };
 
 
 
@@ -579,6 +597,8 @@ namespace TaiAiAddin.Views
 
         private void BtnApplyTheme6_Click(object sender, RoutedEventArgs e) { ApplyTheme(6); }
 
+        private void BtnApplyTheme7_Click(object sender, RoutedEventArgs e) { ApplyTheme(7); }
+
 
 
         private void CardTheme1_MouseDown(object sender, MouseButtonEventArgs e) { ApplyTheme(1); }
@@ -592,6 +612,8 @@ namespace TaiAiAddin.Views
         private void CardTheme5_MouseDown(object sender, MouseButtonEventArgs e) { ApplyTheme(5); }
 
         private void CardTheme6_MouseDown(object sender, MouseButtonEventArgs e) { ApplyTheme(6); }
+
+        private void CardTheme7_MouseDown(object sender, MouseButtonEventArgs e) { ApplyTheme(7); }
 
 
 

@@ -884,6 +884,24 @@
                                     </Grid>
                                 </Border>
 
+                                <!-- Theme 7: Tết Giáp Thìn - Xuân May Mắn -->
+                                <Border x:Name="cardTheme7" Cursor="Hand" MouseLeftButtonDown="CardTheme7_MouseDown" Background="#1A0A0C" BorderBrush="{DynamicResource BorderDivider}" BorderThickness="1" CornerRadius="5" Padding="8,6" Margin="0,0,0,5">
+                                    <Grid HorizontalAlignment="Stretch">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="7. 🌸 Tết Giáp Thìn - Xuân May Mắn" FontWeight="Bold" FontSize="11" Foreground="#FFD700"/>
+                                            <TextBlock Text="Nền đỏ thắm #1A0A0C, Card #261014, Vàng Hoàng Kim &amp; Hoa Đào" FontSize="9" Foreground="#D4B8B2"/>
+                                        </StackPanel>
+                                        <Border x:Name="badgeTheme7" Grid.Column="1" Background="#FFD700" CornerRadius="3" Padding="6,2" VerticalAlignment="Center" Visibility="Collapsed">
+                                            <TextBlock Text="✓ ĐANG DÙNG" FontSize="8.5" FontWeight="Black" Foreground="#1A0A0C"/>
+                                        </Border>
+                                        <Button x:Name="btnApplyTheme7" Grid.Column="1" Content="Áp Dụng" Style="{StaticResource FluidConfigButtonStyle}" Padding="8,3" FontSize="9.5" Visibility="Visible" Click="BtnApplyTheme7_Click"/>
+                                    </Grid>
+                                </Border>
+
                                 <Separator Background="{DynamicResource BorderDivider}" Margin="0,6,0,6"/>
 
                                 <!-- Cỡ chữ hiển thị: COMBOBOX THỰC SỰ THAY ĐỔI CỠ CHỮ -->
