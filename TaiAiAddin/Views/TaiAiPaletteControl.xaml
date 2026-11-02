@@ -862,6 +862,10 @@
                                         <Border x:Name="badgeTheme5" Grid.Column="1" Background="#40C4FF" CornerRadius="3" Padding="6,2" VerticalAlignment="Center" Visibility="Collapsed">
                                             <TextBlock Text="✓ ĐANG DÙNG" FontSize="8.5" FontWeight="Black" Foreground="#12161F"/>
                                         </Border>
+                                        <Button x:Name="btnApplyTheme5" Grid.Column="1" Content="Áp Dụng" Style="{StaticResource FluidConfigButtonStyle}" Padding="8,3" FontSize="9.5" Visibility="Visible" Click="BtnApplyTheme5_Click"/>
+                                    </Grid>
+                                </Border>
+
                                 <!-- Theme 6: Giáng Sinh An Lành (Noel Christmas Magic) -->
                                 <Border x:Name="cardTheme6" Cursor="Hand" MouseLeftButtonDown="CardTheme6_MouseDown" Background="#180D10" BorderBrush="{DynamicResource BorderDivider}" BorderThickness="1" CornerRadius="5" Padding="8,6" Margin="0,0,0,5">
                                     <Grid HorizontalAlignment="Stretch">
@@ -876,11 +880,7 @@
                                         <Border x:Name="badgeTheme6" Grid.Column="1" Background="#FF334B" CornerRadius="3" Padding="6,2" VerticalAlignment="Center" Visibility="Collapsed">
                                             <TextBlock Text="✓ ĐANG DÙNG" FontSize="8.5" FontWeight="Black" Foreground="#FFFFFF"/>
                                         </Border>
-                                        <Button x:Name="btnApplyTheme6" Grid.Column="1" Content="Áp Dụng" Style="{StaticResource FluidConfigButtonStyle}" Width="65" Height="22" Padding="0" FontSize="10" Click="BtnApplyTheme6_Click"/>
-                                    </Grid>
-                                </Border>
-
-                                        <Button x:Name="btnApplyTheme5" Grid.Column="1" Content="Áp Dụng" Style="{StaticResource FluidConfigButtonStyle}" Padding="8,3" FontSize="9.5" Visibility="Visible" Click="BtnApplyTheme5_Click"/>
+                                        <Button x:Name="btnApplyTheme6" Grid.Column="1" Content="Áp Dụng" Style="{StaticResource FluidConfigButtonStyle}" Padding="8,3" FontSize="9.5" Visibility="Visible" Click="BtnApplyTheme6_Click"/>
                                     </Grid>
                                 </Border>
 
