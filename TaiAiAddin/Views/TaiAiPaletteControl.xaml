@@ -902,6 +902,24 @@
                                     </Grid>
                                 </Border>
 
+                                <!-- Theme 8: Deep Galaxy - Vũ Trụ Huyền Bí -->
+                                <Border x:Name="cardTheme8" Cursor="Hand" MouseLeftButtonDown="CardTheme8_MouseDown" Background="#0A0E1A" BorderBrush="{DynamicResource BorderDivider}" BorderThickness="1" CornerRadius="5" Padding="8,6" Margin="0,0,0,5">
+                                    <Grid HorizontalAlignment="Stretch">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="8. 🌌 Deep Galaxy - Vũ Trụ Huyền Bí" FontWeight="Bold" FontSize="11" Foreground="#00F0FF"/>
+                                            <TextBlock Text="Nền xanh vũ trụ #0A0E1A, Card #121A2D, Tinh Vân Cyan &amp; Tím Không Gian" FontSize="9" Foreground="#8FA8C7"/>
+                                        </StackPanel>
+                                        <Border x:Name="badgeTheme8" Grid.Column="1" Background="#00F0FF" CornerRadius="3" Padding="6,2" VerticalAlignment="Center" Visibility="Collapsed">
+                                            <TextBlock Text="✓ ĐANG DÙNG" FontSize="8.5" FontWeight="Black" Foreground="#0A0E1A"/>
+                                        </Border>
+                                        <Button x:Name="btnApplyTheme8" Grid.Column="1" Content="Áp Dụng" Style="{StaticResource FluidConfigButtonStyle}" Padding="8,3" FontSize="9.5" Visibility="Visible" Click="BtnApplyTheme8_Click"/>
+                                    </Grid>
+                                </Border>
+
                                 <Separator Background="{DynamicResource BorderDivider}" Margin="0,6,0,6"/>
 
                                 <!-- Cỡ chữ hiển thị: COMBOBOX THỰC SỰ THAY ĐỔI CỠ CHỮ -->
