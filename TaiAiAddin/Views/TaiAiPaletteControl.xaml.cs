@@ -1,4 +1,6 @@
-﻿using System;
+﻿using System.Reflection;
+using System.Windows.Media.Imaging;
+using System;
 
 using System.Collections.Generic;
 
@@ -393,22 +395,22 @@ namespace TaiAiAddin.Views
                     LogoTextBg = "#1A0A0C"
                 },
 
-                // Theme 8: Deep Galaxy - Vũ Trụ Huyền Bí
+                // Theme 8: Andromeda Galaxy (Dải Ngân Hà Xanh Vũ Trụ)
                 new ThemeDefinition
                 {
-                    Name = "Deep Galaxy - Vũ Trụ Huyền Bí",
-                    BgPrimary = "#0A0E1A",
-                    BgSurface = "#121A2D",
-                    BgSubCard = "#0E1424",
-                    BgHover = "#1A2640",
-                    BorderDivider = "#223354",
-                    AccentCyan = "#00F0FF",
-                    AccentAmber = "#9D4EDD",
-                    TextPrimary = "#F0F6FC",
-                    TextSecondary = "#8FA8C7",
-                    Grad1 = "#00F0FF",
-                    Grad2 = "#9D4EDD",
-                    LogoTextBg = "#0A0E1A"
+                    Name = "Andromeda Galaxy (Dải Ngân Hà)",
+                    BgPrimary = "#030712",
+                    BgSurface = "#0B132B",
+                    BgSubCard = "#070E22",
+                    BgHover = "#16254A",
+                    BorderDivider = "#1C2E5E",
+                    AccentCyan = "#2979FF",
+                    AccentAmber = "#D946EF",
+                    TextPrimary = "#F1F5F9",
+                    TextSecondary = "#94A3B8",
+                    Grad1 = "#2979FF",
+                    Grad2 = "#D946EF",
+                    LogoTextBg = "#030712"
                 }
 
             };
@@ -508,6 +510,9 @@ namespace TaiAiAddin.Views
 
             }
 
+            // 4. Kích hoạt hiệu ứng nền ảnh Galaxy (Theme 8)
+            UpdateGalaxyVisual(themeIndex);
+
             if (txtLogoText != null)
 
             {
@@ -603,6 +608,55 @@ namespace TaiAiAddin.Views
         }
 
 
+
+        private BitmapImage _cachedGalaxyBitmap = null;
+        private void UpdateGalaxyVisual(int themeIndex)
+        {
+            try
+            {
+                if (themeIndex == 8)
+                {
+                    if (_cachedGalaxyBitmap == null)
+                    {
+                        string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                        string[] candidatePaths = new string[]
+                        {
+                            Path.Combine(appData, "Autodesk", "ApplicationPlugins", "TaiAiAddin.bundle", "Contents", "Resources", "galaxy_bg.png"),
+                            Path.Combine(appData, "TaiAiAddin", "galaxy_bg.png"),
+                            Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "Resources", "galaxy_bg.png"),
+                            @"D:01. NGUYEN TAN TAI\CODING AI\00.BAI 1_TOOLS\TaiAiAddin\Resources\galaxy_bg.png"
+                        };
+
+                        foreach (string p in candidatePaths)
+                        {
+                            if (!string.IsNullOrEmpty(p) && File.Exists(p))
+                            {
+                                BitmapImage bi = new BitmapImage();
+                                bi.BeginInit();
+                                bi.UriSource = new Uri(p, UriKind.Absolute);
+                                bi.CacheOption = BitmapCacheOption.OnLoad;
+                                bi.EndInit();
+                                bi.Freeze();
+                                _cachedGalaxyBitmap = bi;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (_cachedGalaxyBitmap != null)
+                    {
+                        if (imgGalaxyBg != null) { imgGalaxyBg.Source = _cachedGalaxyBitmap; imgGalaxyBg.Visibility = System.Windows.Visibility.Visible; }
+                        if (imgGalaxyHeader != null) { imgGalaxyHeader.Source = _cachedGalaxyBitmap; imgGalaxyHeader.Visibility = System.Windows.Visibility.Visible; }
+                    }
+                }
+                else
+                {
+                    if (imgGalaxyBg != null) imgGalaxyBg.Visibility = System.Windows.Visibility.Collapsed;
+                    if (imgGalaxyHeader != null) imgGalaxyHeader.Visibility = System.Windows.Visibility.Collapsed;
+                }
+            }
+            catch { }
+        }
 
         private void BtnApplyTheme1_Click(object sender, RoutedEventArgs e) { ApplyTheme(1); }
 

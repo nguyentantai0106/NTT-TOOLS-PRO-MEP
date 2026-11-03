@@ -296,17 +296,27 @@
             <RowDefinition Height="Auto"/>  <!-- Status bar đáy -->
         </Grid.RowDefinitions>
 
+        <!-- 0. HÌNH NỀN DẢI NGÂN HÀ ANDROMEDA NGHỆ THUẬT (Kích hoạt khi chọn Theme 8) -->
+        <Image x:Name="imgGalaxyBg" Grid.RowSpan="3" Stretch="UniformToFill" Opacity="0.30" 
+               HorizontalAlignment="Center" VerticalAlignment="Center" 
+               IsHitTestVisible="False" Visibility="Collapsed"/>
+
         <!-- ========================================================= -->
         <!-- 1. ĐẦU TIÊN: PHẦN LOGO NTT TOOLS (Co Dãn Tự Động)         -->
         <!-- ========================================================= -->
         <Border Grid.Row="0" CornerRadius="8" Background="{DynamicResource BgSurface}" BorderBrush="{DynamicResource BorderDivider}" BorderThickness="1.2" 
-                Padding="12,10" Margin="0,0,0,10" HorizontalAlignment="Stretch">
+                Padding="12,10" Margin="0,0,0,10" HorizontalAlignment="Stretch" ClipToBounds="True">
             <Grid HorizontalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
+
+                <!-- Galaxy Header Overlay Background -->
+                <Image x:Name="imgGalaxyHeader" Grid.ColumnSpan="3" Stretch="UniformToFill" Opacity="0.45" 
+                       HorizontalAlignment="Center" VerticalAlignment="Center" 
+                       IsHitTestVisible="False" Visibility="Collapsed" Margin="-12,-10"/>
 
                 <!-- Logo Badge NTT với gradient phát sáng -->
                 <Border x:Name="borderLogoBadge" Grid.Column="0" Width="42" Height="42" CornerRadius="7" Margin="0,0,10,0" VerticalAlignment="Center">
@@ -767,14 +777,14 @@
                         <DockPanel Margin="0,0,0,10">
                             <TextBlock Text="🎨 CẤU HÌNH GIAO DIỆN (UI/UX THEMES)" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource AccentCyan}"/>
                             <Border Background="{DynamicResource BgHover}" CornerRadius="3" Padding="4,1" HorizontalAlignment="Right">
-                                <TextBlock Text="6 THEMES" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource AccentCyan}"/>
+                                <TextBlock Text="8 THEMES" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource AccentCyan}"/>
                             </Border>
                         </DockPanel>
 
                         <!-- 5 Chủ đề màu sắc trực quan (Click Áp Dụng để đổi màu ngay) -->
                         <Border Style="{StaticResource FluidSubCardStyle}">
                             <StackPanel>
-                                <TextBlock Text="Chọn và Áp Dụng 1 trong 6 Bộ Theme Màu Sắc:" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,8" Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock Text="Chọn và Áp Dụng 1 trong 8 Bộ Theme Màu Sắc:" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,8" Foreground="{DynamicResource TextPrimary}"/>
 
                                 <!-- Theme 1: Dark Deep Space (Mặc định) -->
                                 <Border x:Name="cardTheme1" Cursor="Hand" MouseLeftButtonDown="CardTheme1_MouseDown" Background="#12161F" BorderBrush="#00E5FF" BorderThickness="1.5" CornerRadius="5" Padding="8,6" Margin="0,0,0,5">
@@ -902,19 +912,19 @@
                                     </Grid>
                                 </Border>
 
-                                <!-- Theme 8: Deep Galaxy - Vũ Trụ Huyền Bí -->
-                                <Border x:Name="cardTheme8" Cursor="Hand" MouseLeftButtonDown="CardTheme8_MouseDown" Background="#0A0E1A" BorderBrush="{DynamicResource BorderDivider}" BorderThickness="1" CornerRadius="5" Padding="8,6" Margin="0,0,0,5">
+                                <!-- Theme 8: Andromeda Galaxy - Dải Ngân Hà -->
+                                <Border x:Name="cardTheme8" Cursor="Hand" MouseLeftButtonDown="CardTheme8_MouseDown" Background="#0B132B" BorderBrush="{DynamicResource BorderDivider}" BorderThickness="1" CornerRadius="5" Padding="8,6" Margin="0,0,0,5">
                                     <Grid HorizontalAlignment="Stretch">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="8. 🌌 Deep Galaxy - Vũ Trụ Huyền Bí" FontWeight="Bold" FontSize="11" Foreground="#00F0FF"/>
-                                            <TextBlock Text="Nền xanh vũ trụ #0A0E1A, Card #121A2D, Tinh Vân Cyan &amp; Tím Không Gian" FontSize="9" Foreground="#8FA8C7"/>
+                                            <TextBlock Text="8. 🌌 Andromeda Galaxy - Dải Ngân Hà" FontWeight="Bold" FontSize="11" Foreground="#2979FF"/>
+                                            <TextBlock Text="Nền vũ trụ sâu thẳm #030712, Tâm tinh vân #D946EF &amp; Lam Sapphire #2979FF" FontSize="9" Foreground="#94A3B8"/>
                                         </StackPanel>
-                                        <Border x:Name="badgeTheme8" Grid.Column="1" Background="#00F0FF" CornerRadius="3" Padding="6,2" VerticalAlignment="Center" Visibility="Collapsed">
-                                            <TextBlock Text="✓ ĐANG DÙNG" FontSize="8.5" FontWeight="Black" Foreground="#0A0E1A"/>
+                                        <Border x:Name="badgeTheme8" Grid.Column="1" Background="#2979FF" CornerRadius="3" Padding="6,2" VerticalAlignment="Center" Visibility="Collapsed">
+                                            <TextBlock Text="✓ ĐANG DÙNG" FontSize="8.5" FontWeight="Black" Foreground="#FFFFFF"/>
                                         </Border>
                                         <Button x:Name="btnApplyTheme8" Grid.Column="1" Content="Áp Dụng" Style="{StaticResource FluidConfigButtonStyle}" Padding="8,3" FontSize="9.5" Visibility="Visible" Click="BtnApplyTheme8_Click"/>
                                     </Grid>
