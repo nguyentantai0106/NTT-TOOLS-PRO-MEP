@@ -1,0 +1,153 @@
+﻿<Window x:Class="TaiAiAddin.Views.UnknownEntitiesReviewDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="NTT TOOLS | BÁO CÁO ĐỐI TƯỢNG MỚI NGOÀI VÙNG TRI THỨC"
+        Height="580" Width="920"
+        WindowStartupLocation="CenterOwner"
+        Background="#12161F"
+        Foreground="#F8FAFC"
+        FontFamily="Segoe UI">
+    <Window.Resources>
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="#1E2433"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderBrush" Value="#333D54"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12"/>
+        </Style>
+
+        <Style x:Key="ActionBtnStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.88"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header Cảnh báo Tri Thức -->
+        <Border Grid.Row="0" Style="{StaticResource CardStyle}" BorderBrush="#FF9100" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock x:Name="txtHeaderTitle" Text="⚠️ PHÁT HIỆN ĐỐI TƯỢNG MỚI NGOÀI VÙNG TRI THỨC"
+                               FontSize="15" FontWeight="Bold" Foreground="#FF9100"/>
+                    <TextBlock x:Name="txtHeaderSubtitle"
+                               Text="Chưa có đối tượng nào bị đổi layer. Vui lòng kiểm tra các đối tượng mới dưới đây trước khi xác nhận chuẩn hóa."
+                               FontSize="12" Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+                <Border Grid.Column="1" Background="#12161F" CornerRadius="6" Padding="10,6" VerticalAlignment="Center" BorderBrush="#333D54" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock x:Name="txtKnownBadge" Text="Đã khớp tri thức: 0" FontSize="11.5" FontWeight="SemiBold" Foreground="#00E676" FontFamily="Consolas"/>
+                        <TextBlock x:Name="txtUnknownBadge" Text="Ngoài tri thức: 0" FontSize="11.5" FontWeight="SemiBold" Foreground="#FFD600" FontFamily="Consolas" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Thanh Công Cụ Nhanh -->
+        <Grid Grid.Row="1" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <Button Content="☑️ Tích Chọn Tất Cả" Click="BtnSelectAll_Click" Style="{StaticResource ActionBtnStyle}"
+                        Background="#2A3246" BorderBrush="#333D54" Margin="0,0,8,0"/>
+                <Button Content="⬜ Bỏ Tích Tất Cả" Click="BtnUnselectAll_Click" Style="{StaticResource ActionBtnStyle}"
+                        Background="#1E2433" BorderBrush="#333D54" Margin="0,0,8,0"/>
+                <Button Content="🔍 Zoom Tới Đối Tượng Đang Chọn" Click="BtnZoomSelected_Click" Style="{StaticResource ActionBtnStyle}"
+                        Background="#1E2433" BorderBrush="#00E5FF" Foreground="#00E5FF"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <TextBlock Text="Gán nhanh cho dòng đã tích:" VerticalAlignment="Center" Foreground="#94A3B8" FontSize="11.5" Margin="0,0,8,0"/>
+                <ComboBox x:Name="cboBatchAssign" Width="150" Background="#1E2433" Foreground="#00E5FF" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <Button Content="Gán Nhãn" Click="BtnBatchAssign_Click" Style="{StaticResource ActionBtnStyle}"
+                        Background="#2A3246" BorderBrush="#00E5FF" Foreground="#00E5FF"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Bảng Danh Sách Đối Tượng Ngoài Tri Thức -->
+        <DataGrid x:Name="dgUnknownItems" Grid.Row="2"
+                  AutoGenerateColumns="False" CanUserAddRows="False"
+                  Background="#12161F" Foreground="#F8FAFC"
+                  RowBackground="#1E2433" AlternatingRowBackground="#181D2B"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#333D54"
+                  HeadersVisibility="Column" BorderBrush="#333D54" BorderThickness="1"
+                  SelectionMode="Single" SelectionChanged="DgUnknownItems_SelectionChanged"
+                  MouseDoubleClick="DgUnknownItems_MouseDoubleClick">
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#252D3D"/>
+                    <Setter Property="Foreground" Value="#00E5FF"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="FontSize" Value="11.5"/>
+                    <Setter Property="Padding" Value="8,7"/>
+                    <Setter Property="BorderBrush" Value="#333D54"/>
+                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Header="Áp dụng" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Width="64"/>
+                <DataGridTextColumn Header="Handle" Binding="{Binding HandleStr}" IsReadOnly="True" Width="70"/>
+                <DataGridTextColumn Header="Loại / Tên Block" Binding="{Binding EntityType}" IsReadOnly="True" Width="190"/>
+                <DataGridTextColumn Header="Layer Gốc" Binding="{Binding CurrentLayer}" IsReadOnly="True" Width="125"/>
+                <DataGridTemplateColumn Header="Layer Gán Mục Tiêu" Width="165">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{Binding AvailableTargetLayers}"
+                                      SelectedItem="{Binding SuggestedLayer, UpdateSourceTrigger=PropertyChanged}"
+                                      Background="#12161F" Foreground="#00E5FF" BorderBrush="#333D54" FontWeight="SemiBold"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Mô Tả &amp; Lý Do Phát Hiện" Binding="{Binding Reason}" IsReadOnly="True" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Footer Xác Nhận -->
+        <Grid Grid.Row="3" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="⛔ Hủy Bỏ (Giữ Nguyên Bản Vẽ)" Click="BtnCancel_Click"
+                    Style="{StaticResource ActionBtnStyle}" Background="#252D3D" BorderBrush="#FF5252" Foreground="#FF5252"/>
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button Content="⚡ Chỉ Đổi Phần Đã Biết (Bỏ Qua Mục Lạ)" Click="BtnApplyKnownOnly_Click"
+                        Style="{StaticResource ActionBtnStyle}" Background="#1E2433" BorderBrush="#00E676" Foreground="#00E676" Margin="0,0,10,0"/>
+                <Button Content="✅ Xác Nhận Chuẩn Hóa (Cả Mục Đã Tích)" Click="BtnConfirmAllSelected_Click"
+                        Style="{StaticResource ActionBtnStyle}" Background="#FF9100" BorderBrush="#FF9100" Foreground="#12161F"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

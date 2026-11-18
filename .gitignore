@@ -37,3 +37,12 @@ scratch/
 *.txt
 *.scr
 *.log
+*.zip
+*.bak*
+*.pkg
+test.py
+check_cards.py
+inspect_giado.py
+NTT_SLD_Studio_Portable/
+SldStudioWeb/build/
+SldStudioWeb/dist/

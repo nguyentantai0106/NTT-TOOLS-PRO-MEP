@@ -1,4 +1,4 @@
-﻿﻿﻿# Bộ Quy Chuẩn Kỹ Thuật AutoCAD Add-in (AI Coding Rules)
+﻿﻿# Bộ Quy Chuẩn Kỹ Thuật AutoCAD Add-in (AI Coding Rules)
 
 Tài liệu này là quy chuẩn kỹ thuật bắt buộc khi phát triển add-in AutoCAD (.NET C#/WPF). Mọi phản hồi và mã nguồn sinh ra phải tuân thủ nghiêm ngặt 5 phần dưới đây.
 
@@ -81,3 +81,22 @@ Khi phỏng vấn thu thập thông tin đạt ngưỡng $\ge 85\%$, AI đối c
 3. **Hình học CAD & Thư viện:** Dùng block mẫu file DWG hay vẽ hình học thuần? Tên Layer, ColorIndex, kiểu nét? Hướng xoay góc, tiếp điểm mở về hướng nào (`flipped`), khoảng cách offset, tỷ lệ scale?
 4. **Tình huống biên (Edge Cases):** Bấm ESC giữa chừng, chọn sai đối tượng, layer bị khóa, dữ liệu âm/rỗng xử lý an toàn ra sao?
 5. **Hiệu năng & Môi trường:** Fast Task hay Heavy Task? Phiên bản AutoCAD mục tiêu (.NET 4.8 hay .NET 8)?
+
+---
+
+## 6. Quy Chuẩn Block Thư Viện Bắt Buộc 100% (Strict Block Enforcement)
+
+> [!CAUTION]
+> **CẤM TỰ TẠO BLOCK & CẤM VẼ HÌNH HỌC NGUYÊN THỦY THAY THẾ BLOCK:**
+> 1. Khi vẽ bất kỳ cấu kiện, thiết bị, phụ kiện MEP (Thang máng cáp, Co, Tê, Côn thu, Tủ điện, Đầu phun, Miệng gió, Thiết bị vệ sinh): **BẮT BUỘC 100% PHẢI DÙNG FILE BLOCK DWG CÓ SẴN TRONG THƯ VIỆN DỰ ÁN**.
+> 2. Tuyệt đối không tự tạo block mới hoặc vẽ các nét rời rạc (`LINE`, `LWPOLYLINE`, `ARC`) thay thế cho block.
+
+---
+
+## 7. Bắt Buộc Duy Trì Bảng Live Preview Dashboard (Áp Dụng Toàn Diện 100%)
+
+> [!IMPORTANT]
+> **QUY TẮC ĐỒNG BỘ TRỰC QUAN MỌI LÚC - MỌI TÁC VỤ (KHÔNG NGOẠI LỆ):**
+> 1. **Duy trì Artifact Live Dashboard:** Bắt buộc duy trì và kích hoạt bảng Live Preview Dashboard (`live_project_dashboard.md`) trên panel Artifact của Antigravity xuyên suốt mọi tác vụ và mọi phiên làm việc.
+> 2. **Cập nhật tức thời (Auto-Sync on Every Change):** Trong bất kỳ tình huống nào: sửa file code, thao tác lệnh CAD, build DLL, Hot Reload hoặc đổi trạng thái tác vụ -> AI **BẮT BUỘC PHẢI TỰ ĐỘNG CẬP NHẬT NGAY LẬP TỨC** vào bảng `live_project_dashboard.md` để kỹ sư luôn luôn nhìn thấy những thay đổi mới nhất theo thời gian thực.
+

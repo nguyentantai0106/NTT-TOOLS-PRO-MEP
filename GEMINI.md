@@ -1,4 +1,4 @@
-﻿﻿﻿# Bộ Quy Chuẩn Kỹ Thuật AutoCAD Add-in (AI Coding Rules)
+﻿# Bộ Quy Chuẩn Kỹ Thuật AutoCAD Add-in (AI Coding Rules)
 
 Tài liệu này là quy chuẩn kỹ thuật bắt buộc khi phát triển add-in AutoCAD (.NET C#/WPF). Mọi phản hồi và mã nguồn sinh ra phải tuân thủ nghiêm ngặt 5 phần dưới đây.
 
@@ -81,3 +81,31 @@ Khi phỏng vấn thu thập thông tin đạt ngưỡng $\ge 85\%$, AI đối c
 3. **Hình học CAD & Thư viện:** Dùng block mẫu file DWG hay vẽ hình học thuần? Tên Layer, ColorIndex, kiểu nét? Hướng xoay góc, tiếp điểm mở về hướng nào (`flipped`), khoảng cách offset, tỷ lệ scale?
 4. **Tình huống biên (Edge Cases):** Bấm ESC giữa chừng, chọn sai đối tượng, layer bị khóa, dữ liệu âm/rỗng xử lý an toàn ra sao?
 5. **Hiệu năng & Môi trường:** Fast Task hay Heavy Task? Phiên bản AutoCAD mục tiêu (.NET 4.8 hay .NET 8)?
+
+---
+
+## 6. Quy Chuẩn Block Thư Viện Bắt Buộc 100% (Strict Block Enforcement)
+
+> [!CAUTION]
+> **CẤM TỰ TẠO BLOCK & CẤM VẼ HÌNH HỌC NGUYÊN THỦY THAY THẾ BLOCK:**
+> 1. Khi vẽ bất kỳ cấu kiện, thiết bị, phụ kiện MEP (Thang máng cáp, Co, Tê, Côn thu, Tủ điện, Đầu phun, Miệng gió, Thiết bị vệ sinh): **BẮT BUỘC 100% PHẢI DÙNG FILE BLOCK DWG CÓ SẴN TRONG THƯ VIỆN DỰ ÁN** (`Thư Viện\Điện\Thang máng`, `Thư Viện\Điện\BOX ĐIỆN`, `Thư Viện\CTN`, `Thư Viện\DHKK`, `Thư Viện\PCCC`).
+> 2. **Tuyệt đối không được tự tạo block mới** (`entmake "BLOCK"`, `new BlockTableRecord()` tự tạo từ nét vẽ rỗng, block nặc danh `*U...`).
+> 3. **Tuyệt đối không vẽ các nét rời rạc (`LINE`, `LWPOLYLINE`, `ARC`)** để mô phỏng hay vẽ thay thế cho phụ kiện hoặc thân máng/thiết bị.
+> 4. **Cơ chế nạp chuẩn:** Kiểm tra `BlockTable` -> Nếu chưa có thì nạp trực tiếp cấu trúc từ file DWG thư viện (`Database.Insert` / `(command "-INSERT" ...)`) -> Chèn `BlockReference` -> Điều chỉnh `DynamicBlockReferenceProperty` (`Distance1`, `Width`, `Height`, v.v.).
+> 5. **Xem chi tiết tại Skill:** `cad-strict-block-enforcement`.
+
+---
+
+## 7. Bắt Buộc Duy Trì Bảng Live Preview Dashboard (Áp Dụng Toàn Diện 100%)
+
+> [!IMPORTANT]
+> **QUY TẮC ĐỒNG BỘ TRỰC QUAN MỌI LÚC - MỌI TÁC VỤ (KHÔNG NGOẠI LỆ):**
+> 1. **Duy trì Artifact Live Dashboard:** Bắt buộc duy trì và kích hoạt bảng Live Preview Dashboard (`live_project_dashboard.md`) trên panel Artifact của Antigravity xuyên suốt mọi tác vụ và mọi phiên làm việc.
+> 2. **Cập nhật tức thời (Auto-Sync on Every Change):** Trong bất kỳ tình huống nào dưới đây:
+>    - Thay đổi mã nguồn (`.cs`, `.xaml`, `.lsp`, scripts, cấu hình).
+>    - Thực thi lệnh vẽ CAD (SLD, Thang máng cáp, Thiết bị điện, PCCC, HVAC, v.v.).
+>    - Biên dịch `TaiAiAddin.dll` hoặc kích hoạt Hot Reload `NTTRELOAD`.
+>    - Chuyển giai đoạn tác vụ hoặc phát sinh cảnh báo kỹ thuật.
+>    -> AI **BẮT BUỘC PHẢI TỰ ĐỘNG CẬP NHẬT NGAY LẬP TỨC** vào bảng `live_project_dashboard.md` để kỹ sư luôn luôn nhìn thấy những thay đổi mới nhất theo thời gian thực.
+
+

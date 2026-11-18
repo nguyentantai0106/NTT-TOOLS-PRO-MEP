@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -49,6 +49,7 @@ public partial class ElectricalPanelDialog : Window
 		private DrawingParameters _params;
 
 		private bool _isInitializing;
+		private bool _isSwitchingPanel = false;
 
 		private bool _isCalculating;
 
@@ -194,6 +195,25 @@ public partial class ElectricalPanelDialog : Window
 
 
 
+		static ElectricalPanelDialog()
+		{
+			AppDomain.CurrentDomain.AssemblyResolve += (s, e) =>
+			{
+				try
+				{
+					if (e == null || string.IsNullOrEmpty(e.Name)) return null;
+					if (e.Name.IndexOf(".resources", StringComparison.OrdinalIgnoreCase) >= 0) return null;
+					System.Reflection.AssemblyName an = new System.Reflection.AssemblyName(e.Name);
+					if (string.Equals(an.Name, "TaiAiAddin", StringComparison.OrdinalIgnoreCase))
+					{
+						return typeof(ElectricalPanelDialog).Assembly;
+					}
+				}
+				catch { }
+				return null;
+			};
+		}
+
 		public ElectricalPanelDialog() : this(null)
 		{
 		}
@@ -205,6 +225,7 @@ public partial class ElectricalPanelDialog : Window
 			_calculator = new ElectricalCalculator();
 			_drawingService = new ElectricalDrawingService();
 			_params = new DrawingParameters();
+			this.Closing += OnDialogClosing;
 			InitPanels(initialPanelName);
 			if (_panel != null && _panel.DrawingParams != null)
 			{
@@ -224,8 +245,45 @@ public partial class ElectricalPanelDialog : Window
 			_isInitializing = false;
 		}
 
+		private void OnDialogClosing(object sender, System.ComponentModel.CancelEventArgs e)
+		{
+			try
+			{
+				CleanCollectionView(_panelsList);
+				CleanCollectionView(_panel != null ? _panel.Loads : null);
+				try { if (dgLoads != null) { dgLoads.CommitEdit(DataGridEditingUnit.Row, true); dgLoads.CancelEdit(); } } catch { }
+				if (_panel != null)
+				{
+					_panel.DrawingParams = (_params != null ? _params.Clone() : null);
+					PanelStorageService.AddOrUpdatePanel(_panel);
+				}
+				var doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager != null ? Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument : null;
+				if (doc != null)
+				{
+					using (doc.LockDocument())
+					{
+						PanelStorageService.SavePanelsToDwg(doc.Database);
+					}
+				}
+			}
+			catch { }
+		}
+
 		private void InitPanels(string initialPanelName)
 		{
+			var docActive = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager != null ? Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument : null;
+			if (docActive != null)
+			{
+				try
+				{
+					using (docActive.LockDocument())
+					{
+						PanelStorageService.LoadPanelsFromDwg(docActive.Database);
+					}
+				}
+				catch { }
+			}
+
 			List<ElectricalPanel> allPanels = PanelStorageService.GetAllPanels();
 			_panelsList = new ObservableCollection<ElectricalPanel>(allPanels);
 			cboPanels.ItemsSource = _panelsList;
@@ -292,11 +350,72 @@ public partial class ElectricalPanelDialog : Window
 			SwitchToPanel(electricalPanel);
 		}
 
+		public static void CleanCollectionView(object collection)
+		{
+			if (collection == null) return;
+			try
+			{
+				System.ComponentModel.IEditableCollectionView ecv = System.Windows.Data.CollectionViewSource.GetDefaultView(collection) as System.ComponentModel.IEditableCollectionView;
+				if (ecv != null)
+				{
+					if (ecv.IsAddingNew) { try { ecv.CommitNew(); } catch { try { ecv.CancelNew(); } catch { } } }
+					if (ecv.IsEditingItem) { try { ecv.CommitEdit(); } catch { try { ecv.CancelEdit(); } catch { } } }
+				}
+			}
+			catch { }
+		}
+
+		private void SafeRefreshDataGrid()
+		{
+			if (dgLoads == null || _panel == null || _panel.Loads == null) return;
+			try
+			{
+				CleanCollectionView(_panel.Loads);
+				try { dgLoads.CommitEdit(DataGridEditingUnit.Cell, true); } catch { }
+				try { dgLoads.CommitEdit(DataGridEditingUnit.Row, true); } catch { }
+				try { dgLoads.CancelEdit(); } catch { }
+				dgLoads.Items.Refresh();
+				if (dgMccStarters != null && dgMccStarters.ItemsSource != null)
+				{
+					try { dgMccStarters.CommitEdit(DataGridEditingUnit.Cell, true); } catch { }
+					try { dgMccStarters.CommitEdit(DataGridEditingUnit.Row, true); } catch { }
+					try { dgMccStarters.CancelEdit(); } catch { }
+					dgMccStarters.Items.Refresh();
+				}
+			}
+			catch
+			{
+				try
+				{
+					CleanCollectionView(_panel.Loads);
+					dgLoads.ItemsSource = null;
+					dgLoads.ItemsSource = _panel.Loads;
+					if (dgMccStarters != null)
+					{
+						dgMccStarters.ItemsSource = null;
+						dgMccStarters.ItemsSource = _panel.Loads;
+					}
+				}
+				catch { }
+			}
+		}
+
+		private void SafeRefreshPanelsCombo()
+		{
+			// Không gọi Items.Refresh() để tránh lỗi 'Refresh is not allowed during AddNew/EditItem'
+		}
+
 		private void SwitchToPanel(ElectricalPanel panel)
 		{
 			if (panel != null)
 			{
-				_panel = panel;
+				_isSwitchingPanel = true;
+				try
+				{
+					CleanCollectionView(_panelsList);
+					CleanCollectionView(panel.Loads);
+					PanelStorageService.SanitizePanel(panel);
+					_panel = panel;
 				if (_panel.DrawingParams != null)
 				{
 					_params = _panel.DrawingParams;
@@ -344,6 +463,11 @@ public partial class ElectricalPanelDialog : Window
 				RefreshUi();
 				DrawCanvasPreview();
 				UpdatePanelCounter();
+				}
+				finally
+				{
+					_isSwitchingPanel = false;
+				}
 			}
 		}
 
@@ -997,6 +1121,24 @@ public partial class ElectricalPanelDialog : Window
 			}, DispatcherPriority.Render);
 		}
 
+		private DispatcherTimer _previewDebounceTimer;
+
+		private void RequestPreviewRedraw()
+		{
+			if (_previewDebounceTimer == null)
+			{
+				_previewDebounceTimer = new DispatcherTimer();
+				_previewDebounceTimer.Interval = TimeSpan.FromMilliseconds(100);
+				_previewDebounceTimer.Tick += delegate
+				{
+					_previewDebounceTimer.Stop();
+					DrawCanvasPreview();
+				};
+			}
+			_previewDebounceTimer.Stop();
+			_previewDebounceTimer.Start();
+		}
+
 		private void AttachLoadEvents()
 		{
 			if (_panel == null || _panel.Loads == null)
@@ -1020,13 +1162,13 @@ public partial class ElectricalPanelDialog : Window
 					double voltageV = ((electricalLoad.Phase == PhaseType.ThreePhase) ? 380.0 : 220.0);
 					ElectricalCalculator.CalculateVoltageDrop(electricalLoad, voltageV, (_panel != null) ? _panel.PowerFactor : 0.85);
 				}
-				DrawCanvasPreview();
+				RequestPreviewRedraw();
 			}
 		}
 
 		private void CboPanels_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			if (_isInitializing)
+			if (_isInitializing || _isSwitchingPanel)
 			{
 				return;
 			}
@@ -1035,7 +1177,8 @@ public partial class ElectricalPanelDialog : Window
 			{
 				if (_panel != null)
 				{
-					_panel.DrawingParams = _params;
+					_panel.DrawingParams = (_params != null ? _params.Clone() : null);
+					PanelStorageService.AddOrUpdatePanel(_panel);
 				}
 				SwitchToPanel(electricalPanel);
 			}
@@ -1049,22 +1192,16 @@ public partial class ElectricalPanelDialog : Window
 			electricalPanel.DefaultCableType = ((!string.IsNullOrEmpty(_panel.DefaultCableType)) ? _panel.DefaultCableType : "Cu/XLPE/PVC");
 			electricalPanel.Loads.Add(new ElectricalLoad
 			{
-				LoadName = "PAU-01",
-				PowerKW = 22.0,
-				Phase = PhaseType.ThreePhase,
-				HasDol = true
-			});
-			electricalPanel.Loads.Add(new ElectricalLoad
-			{
-				LoadName = "FCU-01",
+				Stt = 1,
+				LoadName = "Phụ tải 1",
 				PowerKW = 2.2,
-				Phase = PhaseType.SinglePhase
-			});
-			electricalPanel.Loads.Add(new ElectricalLoad
-			{
-				LoadName = "FCU-02",
-				PowerKW = 2.2,
-				Phase = PhaseType.SinglePhase
+				Phase = PhaseType.SinglePhase,
+				CircuitNumber = "C01",
+				BreakerType = "MCB 1P",
+				BreakerSpec = "MCB 1P-6kA 16A",
+				CableLength = 20.0,
+				ConductorSize = "2.5",
+				AssignedPhase = "R"
 			});
 			_calculator.CalculatePanel(electricalPanel);
 			_panelsList.Add(electricalPanel);
@@ -1109,13 +1246,15 @@ public partial class ElectricalPanelDialog : Window
 
 		private void TxtPanelName_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			if (!_isInitializing && _panel != null && txtPanelName != null)
+			if (!_isInitializing && !_isSwitchingPanel && _panel != null && txtPanelName != null)
 			{
 				string text = txtPanelName.Text.Trim();
-				if (!string.IsNullOrEmpty(text))
+				if (!string.IsNullOrEmpty(text) && text != _panel.PanelName)
 				{
+					string oldName = _panel.PanelName;
 					_panel.PanelName = text;
-					cboPanels.Items.Refresh();
+					PanelStorageService.RenamePanel(oldName, text);
+					SafeRefreshPanelsCombo();
 				}
 			}
 		}
@@ -1151,13 +1290,19 @@ public partial class ElectricalPanelDialog : Window
 
 		private void RefreshUi()
 		{
-			dgLoads.ItemsSource = null;
-			dgLoads.ItemsSource = _panel.Loads;
-			if (dgMccStarters != null)
+			try
 			{
-				dgMccStarters.ItemsSource = null;
-				dgMccStarters.ItemsSource = _panel.Loads;
+				CleanCollectionView(_panel != null ? _panel.Loads : null);
+				if (dgLoads != null && dgLoads.ItemsSource != _panel.Loads)
+				{
+					dgLoads.ItemsSource = _panel.Loads;
+				}
+				if (dgMccStarters != null && dgMccStarters.ItemsSource != _panel.Loads)
+				{
+					dgMccStarters.ItemsSource = _panel.Loads;
+				}
 			}
+			catch { }
 			if (txtMccParentPanel != null && !string.IsNullOrEmpty(_panel.ParentPanelName))
 			{
 				txtMccParentPanel.Text = _panel.ParentPanelName;
@@ -1217,6 +1362,7 @@ public partial class ElectricalPanelDialog : Window
 			_panel.SimultaneousFactor = ((result > 0.0) ? result : 0.85);
 			_panel.PowerFactor = ((result2 > 0.0) ? result2 : 0.85);
 			_calculator.AutoBalancePhases(_panel);
+			SafeRefreshDataGrid();
 			AttachLoadEvents();
 			RefreshUi();
 			DrawCanvasPreview();
@@ -1245,6 +1391,10 @@ public partial class ElectricalPanelDialog : Window
 				RefreshUi();
 				DrawCanvasPreview();
 			}
+			catch (Exception)
+			{
+				// Bảo vệ an toàn tuyệt đối, ngăn mọi ngoại lệ làm sập tiến trình AutoCAD
+			}
 			finally
 			{
 				_isCalculating = false;
@@ -1272,7 +1422,21 @@ public partial class ElectricalPanelDialog : Window
 			electricalLoad.ConductorSize = "10";
 			electricalLoad.AssignedPhase = "3P";
 			electricalLoad.UpdateCableSpec();
-			_panel.Loads.Add(electricalLoad);
+			int insertIdx3P = _panel.Loads.Count;
+			for (int i = 0; i < _panel.Loads.Count; i++)
+			{
+				if (_panel.Loads[i].IsSpare || (!string.IsNullOrEmpty(_panel.Loads[i].CircuitNumber) && _panel.Loads[i].CircuitNumber.StartsWith("SPARE")))
+				{
+					insertIdx3P = i;
+					break;
+				}
+			}
+			_panel.Loads.Insert(insertIdx3P, electricalLoad);
+			for (int i = 0; i < _panel.Loads.Count; i++)
+			{
+				_panel.Loads[i].Stt = i + 1;
+			}
+			SafeRefreshDataGrid();
 			ExecuteCalculation();
 		}
 
@@ -1289,7 +1453,21 @@ public partial class ElectricalPanelDialog : Window
 			electricalLoad.ConductorSize = "2.5";
 			electricalLoad.AssignedPhase = "R";
 			electricalLoad.UpdateCableSpec();
-			_panel.Loads.Add(electricalLoad);
+			int insertIdx1P = _panel.Loads.Count;
+			for (int i = 0; i < _panel.Loads.Count; i++)
+			{
+				if (_panel.Loads[i].IsSpare || (!string.IsNullOrEmpty(_panel.Loads[i].CircuitNumber) && _panel.Loads[i].CircuitNumber.StartsWith("SPARE")))
+				{
+					insertIdx1P = i;
+					break;
+				}
+			}
+			_panel.Loads.Insert(insertIdx1P, electricalLoad);
+			for (int i = 0; i < _panel.Loads.Count; i++)
+			{
+				_panel.Loads[i].Stt = i + 1;
+			}
+			SafeRefreshDataGrid();
 			ExecuteCalculation();
 		}
 
@@ -1309,6 +1487,11 @@ public partial class ElectricalPanelDialog : Window
 			electricalLoad.AssignedPhase = "3P";
 			electricalLoad.UpdateCableSpec();
 			_panel.Loads.Add(electricalLoad);
+			for (int i = 0; i < _panel.Loads.Count; i++)
+			{
+				_panel.Loads[i].Stt = i + 1;
+			}
+			SafeRefreshDataGrid();
 			ExecuteCalculation();
 		}
 
@@ -1328,18 +1511,28 @@ public partial class ElectricalPanelDialog : Window
 			electricalLoad.AssignedPhase = "R";
 			electricalLoad.UpdateCableSpec();
 			_panel.Loads.Add(electricalLoad);
+			for (int i = 0; i < _panel.Loads.Count; i++)
+			{
+				_panel.Loads[i].Stt = i + 1;
+			}
+			SafeRefreshDataGrid();
 			ExecuteCalculation();
 		}
 
 		private void DgLoads_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
 		{
+			if (_isCalculating) return;
 			ElectricalLoad electricalLoad = e.Row.Item as ElectricalLoad;
 			if (electricalLoad != null && e.Column != null)
 			{
 				string text = e.Column.Header as string;
-				if (text != null && text.Contains("CB"))
+				if (text != null && text.Contains("Thông Số CB"))
 				{
 					electricalLoad.IsBreakerUserDefined = true;
+				}
+				else if (text != null && (text.Contains("Tổng P") || text.Contains("P (kW)") || text.Contains("Pha") || text.Contains("Loại CB") || text.Contains("Loại Tải")))
+				{
+					electricalLoad.IsBreakerUserDefined = false;
 				}
 			}
 			base.Dispatcher.BeginInvoke((Action)delegate
@@ -1348,18 +1541,274 @@ public partial class ElectricalPanelDialog : Window
 			}, DispatcherPriority.Background);
 		}
 
+		private Point _dragStartPoint;
+		private bool _isDragging = false;
+		private DependencyObject _dragSourceElement;
+
+		private void DgLoads_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+		{
+			_dragStartPoint = e.GetPosition(null);
+			_dragSourceElement = e.OriginalSource as DependencyObject;
+		}
+
+		private void DgLoads_MouseMove(object sender, MouseEventArgs e)
+		{
+			try
+			{
+				if (e.LeftButton == MouseButtonState.Pressed && !_isDragging)
+				{
+					if (Keyboard.Modifiers == ModifierKeys.Shift || Keyboard.Modifiers == ModifierKeys.Control) return;
+
+					// Xác định ô được click một cách an toàn (tránh lỗi Run không phải Visual)
+					DependencyObject dep = _dragSourceElement;
+					DataGridCell cell = null;
+					while (dep != null && dep != dgLoads)
+					{
+						if (dep is DataGridCell) { cell = (DataGridCell)dep; break; }
+						if (dep is Visual || dep is System.Windows.Media.Media3D.Visual3D)
+						{
+							dep = VisualTreeHelper.GetParent(dep);
+						}
+						else if (dep is FrameworkContentElement)
+						{
+							dep = ((FrameworkContentElement)dep).Parent;
+						}
+						else
+						{
+							break;
+						}
+					}
+
+					// Chỉ kích hoạt kéo thả khi click vào cột STT (DisplayIndex == 0), tránh xung đột khi chọn/sửa ô khác
+					if (cell == null || cell.Column == null || cell.Column.DisplayIndex != 0) return;
+
+					Point currentPosition = e.GetPosition(null);
+					Vector diff = _dragStartPoint - currentPosition;
+					if (Math.Abs(diff.X) > 10 || Math.Abs(diff.Y) > 10)
+					{
+						if (dgLoads.SelectedItems != null && dgLoads.SelectedItems.Count > 0)
+						{
+							_isDragging = true;
+							var selected = dgLoads.SelectedItems.Cast<ElectricalLoad>().ToList();
+							DragDrop.DoDragDrop(dgLoads, selected, DragDropEffects.Move);
+							_isDragging = false;
+						}
+					}
+				}
+			}
+			catch
+			{
+				_isDragging = false;
+			}
+		}
+
+		private void DgLoads_Drop(object sender, DragEventArgs e)
+		{
+			try
+			{
+				if (e.Data.GetDataPresent(typeof(List<ElectricalLoad>)))
+				{
+					var droppedLoads = e.Data.GetData(typeof(List<ElectricalLoad>)) as List<ElectricalLoad>;
+					if (droppedLoads != null && droppedLoads.Count > 0)
+					{
+						DependencyObject dep = e.OriginalSource as DependencyObject;
+						DataGridRow row = null;
+						while (dep != null && dep != dgLoads)
+						{
+							if (dep is DataGridRow) { row = (DataGridRow)dep; break; }
+							if (dep is Visual || dep is System.Windows.Media.Media3D.Visual3D)
+							{
+								dep = VisualTreeHelper.GetParent(dep);
+							}
+							else if (dep is FrameworkContentElement)
+							{
+								dep = ((FrameworkContentElement)dep).Parent;
+							}
+							else
+							{
+								break;
+							}
+						}
+
+						int targetIndex = _panel.Loads.Count;
+						if (row != null)
+						{
+							ElectricalLoad targetLoad = row.Item as ElectricalLoad;
+							if (targetLoad != null)
+							{
+								targetIndex = _panel.Loads.IndexOf(targetLoad);
+							}
+						}
+
+						foreach (var ld in droppedLoads)
+						{
+							int oldIdx = _panel.Loads.IndexOf(ld);
+							if (oldIdx >= 0)
+							{
+								_panel.Loads.RemoveAt(oldIdx);
+								if (targetIndex > oldIdx) targetIndex--;
+								if (targetIndex < 0) targetIndex = 0;
+								if (targetIndex > _panel.Loads.Count) targetIndex = _panel.Loads.Count;
+								_panel.Loads.Insert(targetIndex, ld);
+								targetIndex++;
+							}
+						}
+
+						for (int i = 0; i < _panel.Loads.Count; i++)
+						{
+							_panel.Loads[i].Stt = i + 1;
+						}
+						SafeRefreshDataGrid();
+						DrawCanvasPreview();
+					}
+				}
+			}
+			catch { }
+		}
+
+		private void DgLoads_PreviewKeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.Key == Key.Delete)
+			{
+				BtnDeleteRow_Click(sender, e);
+				e.Handled = true;
+			}
+			else if (e.Key == Key.D && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+			{
+				BtnDuplicateRow_Click(sender, e);
+				e.Handled = true;
+			}
+			else if (e.Key == Key.Up && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+			{
+				BtnMoveUp_Click(sender, e);
+				e.Handled = true;
+			}
+			else if (e.Key == Key.Down && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+			{
+				BtnMoveDown_Click(sender, e);
+				e.Handled = true;
+			}
+		}
+
+		private void BtnMoveUp_Click(object sender, RoutedEventArgs e)
+		{
+			if (dgLoads.SelectedItems == null || dgLoads.SelectedItems.Count == 0) return;
+			var selected = dgLoads.SelectedItems.Cast<ElectricalLoad>().OrderBy(x => _panel.Loads.IndexOf(x)).ToList();
+			if (selected.Count == 0) return;
+
+			int firstIdx = _panel.Loads.IndexOf(selected[0]);
+			if (firstIdx <= 0) return;
+
+			foreach (var item in selected)
+			{
+				int idx = _panel.Loads.IndexOf(item);
+				if (idx > 0)
+				{
+					_panel.Loads.RemoveAt(idx);
+					_panel.Loads.Insert(idx - 1, item);
+				}
+			}
+
+			for (int i = 0; i < _panel.Loads.Count; i++)
+			{
+				_panel.Loads[i].Stt = i + 1;
+			}
+			SafeRefreshDataGrid();
+			DrawCanvasPreview();
+		}
+
+		private void BtnMoveDown_Click(object sender, RoutedEventArgs e)
+		{
+			if (dgLoads.SelectedItems == null || dgLoads.SelectedItems.Count == 0) return;
+			var selected = dgLoads.SelectedItems.Cast<ElectricalLoad>().OrderByDescending(x => _panel.Loads.IndexOf(x)).ToList();
+			if (selected.Count == 0) return;
+
+			int lastIdx = _panel.Loads.IndexOf(selected[0]);
+			if (lastIdx >= _panel.Loads.Count - 1) return;
+
+			bool anyRegular = selected.Any(x => !x.IsSpare);
+			if (anyRegular && lastIdx + 1 < _panel.Loads.Count && _panel.Loads[lastIdx + 1].IsSpare) return;
+
+			foreach (var item in selected)
+			{
+				int idx = _panel.Loads.IndexOf(item);
+				if (idx < _panel.Loads.Count - 1)
+				{
+					_panel.Loads.RemoveAt(idx);
+					_panel.Loads.Insert(idx + 1, item);
+				}
+			}
+
+			for (int i = 0; i < _panel.Loads.Count; i++)
+			{
+				_panel.Loads[i].Stt = i + 1;
+			}
+			SafeRefreshDataGrid();
+			DrawCanvasPreview();
+		}
+
+		private void BtnDuplicateRow_Click(object sender, RoutedEventArgs e)
+		{
+			if (dgLoads.SelectedItems == null || dgLoads.SelectedItems.Count == 0)
+			{
+				MessageBox.Show("Vui lòng chọn phụ tải cần nhân bản.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+				return;
+			}
+
+			var selected = dgLoads.SelectedItems.Cast<ElectricalLoad>().ToList();
+			int insertIdx = _panel.Loads.Count;
+			for (int i = 0; i < _panel.Loads.Count; i++)
+			{
+				if (_panel.Loads[i].IsSpare || (!string.IsNullOrEmpty(_panel.Loads[i].LoadName) && _panel.Loads[i].LoadName.ToUpper().Contains("SPARE")))
+				{
+					insertIdx = i;
+					break;
+				}
+			}
+
+			foreach (var ld in selected)
+			{
+				ElectricalLoad clone = ld.Clone();
+				clone.LoadName = ld.LoadName + " (Copy)";
+				_panel.Loads.Insert(insertIdx++, clone);
+			}
+
+			for (int i = 0; i < _panel.Loads.Count; i++)
+			{
+				_panel.Loads[i].Stt = i + 1;
+			}
+
+			SafeRefreshDataGrid();
+			ExecuteCalculation();
+		}
+
 		private void BtnDeleteRow_Click(object sender, RoutedEventArgs e)
 		{
-			ElectricalLoad electricalLoad = dgLoads.SelectedItem as ElectricalLoad;
-			if (electricalLoad != null && _panel.Loads.Count > 1)
-			{
-				_panel.Loads.Remove(electricalLoad);
-				ExecuteCalculation();
-			}
-			else
+			if (dgLoads.SelectedItems == null || dgLoads.SelectedItems.Count == 0)
 			{
 				MessageBox.Show("Vui lòng chọn phụ tải cần xóa (Bảng phải có ít nhất 1 phụ tải).", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+				return;
 			}
+
+			var toRemove = dgLoads.SelectedItems.Cast<ElectricalLoad>().ToList();
+			if (_panel.Loads.Count - toRemove.Count < 1)
+			{
+				MessageBox.Show("Bảng phải giữ lại ít nhất 1 phụ tải!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+				return;
+			}
+
+			foreach (var ld in toRemove)
+			{
+				_panel.Loads.Remove(ld);
+			}
+
+			for (int i = 0; i < _panel.Loads.Count; i++)
+			{
+				_panel.Loads[i].Stt = i + 1;
+			}
+
+			SafeRefreshDataGrid();
+			ExecuteCalculation();
 		}
 
 		private void BtnExportExcel_Click(object sender, RoutedEventArgs e)
@@ -2090,6 +2539,7 @@ public partial class ElectricalPanelDialog : Window
 							_panel.Loads.Add(load);
 						}
 						_calculator.AutoBalancePhases(_panel);
+						SafeRefreshDataGrid();
 						ExecuteCalculation();
 						txtDialogStatus.Text = string.Format("Đã nhập thành công tủ '{0}' ({1} phụ tải) từ file Excel!", _panel.PanelName, _panel.Loads.Count);
 						MessageBox.Show(string.Format("Đã nhập thành công tủ '{0}' với {1} phụ tải từ Excel!\nĐã tự động tính toán dòng tải, cân pha và chọn thiết bị bảo vệ / cỡ cáp theo tiêu chuẩn.", _panel.PanelName, _panel.Loads.Count), "Nhập Excel Thành Công", MessageBoxButton.OK, MessageBoxImage.Asterisk);
@@ -2219,7 +2669,7 @@ public partial class ElectricalPanelDialog : Window
 					num++;
 				}
 			}
-			dgLoads.Items.Refresh();
+			SafeRefreshDataGrid();
 			DrawCanvasPreview();
 			txtDialogStatus.Text = string.Format("Đã tự động tối ưu & tăng tiết diện cho {0} lộ tải vượt sụt áp TCVN!", num);
 			MessageBox.Show(string.Format("Đã kiểm tra sụt áp TCVN cho tất cả phụ tải:\n- Số lộ được nâng cỡ cáp: {0}", num), "Tối Ưu Sụt Áp", MessageBoxButton.OK, MessageBoxImage.Asterisk);
@@ -4823,7 +5273,19 @@ public partial class ElectricalPanelDialog : Window
 					DrawInteractiveSouthKnifeSwitch(canvas, orCreateCustomItem, false);
 					DrawOrthogonalWireH(num23 + 14.0 * orCreateCustomItem.Scale, num24, tableX, rowMidY, new SolidColorBrush(Color.FromRgb(22, 163, 74)), 1.5);
 				}
-				string text5 = ((electricalLoad.Phase == PhaseType.ThreePhase) ? string.Format("MCB-3P-{0}A-10kA", Math.Max(16.0, Math.Ceiling(electricalLoad.CurrentA * 1.25))) : string.Format("MCB-1P-{0}A-6kA", Math.Max(10.0, Math.Ceiling(electricalLoad.CurrentA * 1.25))));
+				string text5;
+				if (!string.IsNullOrEmpty(electricalLoad.BreakerSpec))
+				{
+					text5 = electricalLoad.BreakerSpec;
+				}
+				else if (!string.IsNullOrEmpty(electricalLoad.BreakerType))
+				{
+					text5 = string.Format("{0} {1}A", electricalLoad.BreakerType, Math.Max(16.0, Math.Ceiling(electricalLoad.CurrentA * 1.25)));
+				}
+				else
+				{
+					text5 = ((electricalLoad.Phase == PhaseType.ThreePhase) ? string.Format("MCB-3P-{0}A-10kA", Math.Max(16.0, Math.Ceiling(electricalLoad.CurrentA * 1.25))) : string.Format("MCB-1P-{0}A-6kA", Math.Max(10.0, Math.Ceiling(electricalLoad.CurrentA * 1.25))));
+				}
 				TextBlock textBlock7 = new TextBlock();
 				textBlock7.Text = text5;
 				textBlock7.FontSize = 8.5;
@@ -4887,14 +5349,26 @@ public partial class ElectricalPanelDialog : Window
 				}
 				else
 				{
-					int num27 = i % 3;
-					if (string.Equals(electricalLoad.AssignedPhase, "B", StringComparison.OrdinalIgnoreCase) || string.Equals(electricalLoad.AssignedPhase, "Y", StringComparison.OrdinalIgnoreCase))
+					int num27;
+					if (electricalLoad.PowerR > 0.0001 && electricalLoad.PowerY <= 0.0001 && electricalLoad.PowerB <= 0.0001)
+					{
+						num27 = 0;
+					}
+					else if (electricalLoad.PowerY > 0.0001 && electricalLoad.PowerR <= 0.0001 && electricalLoad.PowerB <= 0.0001)
 					{
 						num27 = 1;
 					}
-					else if (string.Equals(electricalLoad.AssignedPhase, "C", StringComparison.OrdinalIgnoreCase) || string.Equals(electricalLoad.AssignedPhase, "B", StringComparison.OrdinalIgnoreCase))
+					else if (electricalLoad.PowerB > 0.0001 && electricalLoad.PowerR <= 0.0001 && electricalLoad.PowerY <= 0.0001)
 					{
 						num27 = 2;
+					}
+					else
+					{
+						string ap = (electricalLoad.AssignedPhase ?? "").Trim().ToUpper();
+						if (ap == "R" || ap == "A" || ap == "1") num27 = 0;
+						else if (ap == "Y" || ap == "PHA B" || ap == "2") num27 = 1;
+						else if (ap == "B" || ap == "C" || ap == "PHA C" || ap == "3") num27 = 2;
+						else num27 = i % 3;
 					}
 					switch (num27)
 					{
@@ -6724,7 +7198,7 @@ public partial class ElectricalPanelDialog : Window
 			}
 			if (dgLoads != null)
 			{
-				dgLoads.Items.Refresh();
+				SafeRefreshDataGrid();
 			}
 			SafeDrawCanvasPreview();
 		}
@@ -6743,7 +7217,7 @@ public partial class ElectricalPanelDialog : Window
 			}
 			if (dgLoads != null)
 			{
-				dgLoads.Items.Refresh();
+				SafeRefreshDataGrid();
 			}
 			SafeDrawCanvasPreview();
 		}
@@ -6762,7 +7236,7 @@ public partial class ElectricalPanelDialog : Window
 			}
 			if (dgLoads != null)
 			{
-				dgLoads.Items.Refresh();
+				SafeRefreshDataGrid();
 			}
 			SafeDrawCanvasPreview();
 		}

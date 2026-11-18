@@ -163,10 +163,14 @@ public class CableTrayDrawJig : DrawJig
 
 ### 3.2. Tầng 2: Động Cơ Chèn & Hiển Thị Tức Thì (`Immediate Incremental Commit`)
 
-Quy tắc bất di bất dịch: **Không để người dùng chờ đến khi kết thúc lệnh mới chèn Block**. Mỗi lần `ed.Drag()` trả về `PromptStatus.OK`:
+Quy tắc bất di bất dịch (Tuân thủ 100% Skill `cad-strict-block-enforcement`):
+* **Không để người dùng chờ đến khi kết thúc lệnh mới chèn Block**.
+* **100% sử dụng Block DWG từ thư viện** (`HTS Cable tray.dwg`, `HTS Ladder.dwg`, `HTS Elbow...dwg`, `HTS Reducer...dwg`). **CẤM TỰ TẠO BLOCK** hoặc vẽ LINE thay thế.
+
+Mỗi lần `ed.Drag()` trả về `PromptStatus.OK`:
 1. Giao dịch nguyên tử xóa các thực thể tạm thời của bước trước (`oldEntitiesToErase`).
 2. Tính góc bẻ hướng tại đỉnh gần nhất; nếu có góc rẽ thì chèn Co góc (90° hoặc 45°) với khoảng lùi tiêu chuẩn.
-3. Chèn `BlockReference` thân máng động (`HTS_Ladder` hoặc `HTS_Cable_Tray`), gán `AttributeReference` kích thước `W{W}xH{H}`, tim máng và giá đỡ Unistrut.
+3. Chèn `BlockReference` thân máng động (`HTS Cable tray` hoặc `HTS Ladder` nạp từ thư viện), gán `AttributeReference` kích thước `W{W}xH{H}`, tim máng và giá đỡ Unistrut.
 4. `tr.Commit()` ngay lập tức và gọi `ed.UpdateScreen()`.
 
 ```csharp

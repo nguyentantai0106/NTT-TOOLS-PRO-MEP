@@ -677,6 +677,9 @@
 
                                 <Button x:Name="btnAddSpare1P" Content="➕ Dự Phòng 1P" Style="{StaticResource OutlineBtn}" Click="BtnAddSpare1P_Click" Margin="0,0,8,0" Foreground="#2E7D32" FontWeight="SemiBold"/>
 
+                                <Button x:Name="btnMoveUp" Content="🔼 Lên" Style="{StaticResource OutlineBtn}" Click="BtnMoveUp_Click" Margin="0,0,4,0" ToolTip="Di chuyển phụ tải lên trên (Ctrl+Up)"/>
+                                <Button x:Name="btnMoveDown" Content="🔽 Xuống" Style="{StaticResource OutlineBtn}" Click="BtnMoveDown_Click" Margin="0,0,6,0" ToolTip="Di chuyển phụ tải xuống dưới (Ctrl+Down)"/>
+                                <Button x:Name="btnDuplicateRow" Content="📋 Nhân Bản" Style="{StaticResource OutlineBtn}" Click="BtnDuplicateRow_Click" Margin="0,0,6,0" ToolTip="Nhân bản các phụ tải đang chọn (Ctrl+D)"/>
                                 <Button x:Name="btnDeleteRow" Content="🗑️ Xóa Phụ Tải" Style="{StaticResource OutlineBtn}" Click="BtnDeleteRow_Click" Margin="0,0,10,0"/>
 
                                 <TextBlock Text="* 3P (Đỏ) • 1P (Xanh lá) • DOL/Y-Δ/VFD/SS • Sụt áp &gt; 2.5% cảnh báo đỏ" VerticalAlignment="Center" Foreground="#555" FontSize="11" FontStyle="Italic"/>
@@ -697,12 +700,20 @@
 
                         <!-- Bảng DataGrid hiển thị và chỉnh sửa phụ tải -->
                         <DataGrid Grid.Column="0" x:Name="dgLoads" AutoGenerateColumns="False" CanUserAddRows="False"
-
+                              ScrollViewer.CanContentScroll="True"
+                              ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Visible"
+                              VerticalScrollBarVisibility="Auto"
                               GridLinesVisibility="All" HorizontalGridLinesBrush="#E1E4E8" VerticalGridLinesBrush="#E1E4E8"
-
                               HeadersVisibility="Column" Background="White" RowHeight="28" FontSize="11"
-
-                              SelectionMode="Single" CellEditEnding="DgLoads_CellEditEnding">
+                              SelectionMode="Extended" SelectionUnit="FullRow"
+                              CellEditEnding="DgLoads_CellEditEnding"
+                              PreviewMouseLeftButtonDown="DgLoads_PreviewMouseLeftButtonDown"
+                              MouseMove="DgLoads_MouseMove"
+                              Drop="DgLoads_Drop"
+                              AllowDrop="True"
+                              PreviewKeyDown="DgLoads_PreviewKeyDown">
 
                         <DataGrid.Columns>
 
@@ -822,8 +833,9 @@
 
                                             <ComboBoxItem Content="RCCB 4P (30mA)" Tag="RCCB 4P" Foreground="#D84315" FontWeight="Bold"/>
 
+                                            <ComboBoxItem Content="RCBO 1P+N (30mA)" Tag="RCBO 1P+N" Foreground="#E65100" FontWeight="Bold"/>
                                             <ComboBoxItem Content="RCBO 2P (30mA)" Tag="RCBO 2P" Foreground="#E65100" FontWeight="Bold"/>
-
+                                            <ComboBoxItem Content="RCBO 3P+N (30mA)" Tag="RCBO 3P+N" Foreground="#E65100" FontWeight="Bold"/>
                                             <ComboBoxItem Content="RCBO 4P (30mA)" Tag="RCBO 4P" Foreground="#E65100" FontWeight="Bold"/>
 
                                         </ComboBox>
@@ -1025,7 +1037,7 @@
 
                             <!-- Cột Tiết Diện Cáp Đầy Đủ (cho phép sửa tay nếu muốn) -->
 
-                            <DataGridTextColumn Header="Tiết Diện Dây Cáp (Đầy Đủ + PE)" Binding="{Binding FullCableString, UpdateSourceTrigger=LostFocus}" Width="*"/>
+                            <DataGridTextColumn Header="Tiết Diện Dây Cáp (Đầy Đủ + PE)" Binding="{Binding FullCableString, UpdateSourceTrigger=LostFocus}" Width="240" MinWidth="180"/>
 
                         </DataGrid.Columns>
 

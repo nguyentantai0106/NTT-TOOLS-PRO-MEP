@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 using System.Collections.Generic;
 
@@ -27,8 +27,85 @@ namespace TaiAiAddin.Services
     {
 
         public const string RegAppName = "TAIAI_PANEL";
+        public const string NodPanelsDictKey = "TAIAI_PANELS_DICT";
+
+        public static string RemoveDiacritics(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+            string normalized = text.Normalize(System.Text.NormalizationForm.FormD);
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < normalized.Length; i++)
+            {
+                char c = normalized[i];
+                var uc = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
+                if (uc != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    if (c == 'đ' || c == 'Đ') sb.Append('D');
+                    else sb.Append(c);
+                }
+            }
+            return sb.ToString().Normalize(System.Text.NormalizationForm.FormC);
+        }
+
+        public static bool IsInvalidOrHeaderLoad(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            string norm = RemoveDiacritics(name).Trim().ToUpperInvariant();
+            if (norm.Contains("SO DO") || norm.Contains("SCHEMATIC")) return true;
+            if (norm.StartsWith("TEN TU") || norm.StartsWith("PANEL NAME")) return true;
+            if (norm.StartsWith("TU TU") || norm.StartsWith("FROM PANEL")) return true;
+            if (norm.Contains("PHA, CONG SUAT") || norm.Contains("CONG SUAT (W)") || norm.Contains("POWER (W)")) return true;
+            if (norm.Equals("BUSBAR") || norm.StartsWith("BUSBAR") || norm.Equals("THANH CAI") || norm.Equals("THANHCAI")) return true;
+            if (norm.Equals("KHOI DONG") || norm.StartsWith("KHOI DONG") || norm.StartsWith("STARTER")) return true;
+            if (norm.Equals("DIEU KHIEN") || norm.StartsWith("DIEU KHIEN") || norm.StartsWith("CONTROL")) return true;
+            if (norm.Contains("THIET BI BAO VE") || norm.Contains("PROTECTION")) return true;
+            if (norm.Contains("PHAM VI CAP DIEN") || norm.Contains("LOCATION")) return true;
+            if (norm.Contains("DEN BAO PHA") || norm.Contains("DEN BAO") || norm.Contains("PILOT LAMP") || norm.Contains("SIGNAL LAMP")) return true;
+            if (norm.Contains("DONG HO P/M") || norm.Contains("DONG HO") || norm.Contains("METER") || norm.Contains("MULTIMETER")) return true;
+            if (norm.Equals("FUSE") || norm.Contains("CAU CHI")) return true;
+            if (norm.Equals("DAU VAO") || norm.StartsWith("DAU VAO") || norm.Equals("INCOMER") || norm.StartsWith("INCOMER")) return true;
+            if (norm.Contains("KICH THUOC") || norm.Contains("DIMENSION")) return true;
+            if (norm.Contains("VI TRI") || norm.Contains("POSITION")) return true;
+            if (norm.Contains("TONG CONG SUAT") || norm.Contains("TOTAL POWER")) return true;
+            if (norm.Contains("DONG DIEN TONG") || norm.Contains("TOTAL CURRENT")) return true;
+            if (norm.Contains("CAP NGUON TONG") || norm.Contains("MAIN CABLE")) return true;
+            return false;
+        }
+
+        public static void SanitizePanel(ElectricalPanel panel)
+        {
+            if (panel == null || panel.Loads == null) return;
+            bool modified = false;
+            List<ElectricalLoad> cleanLoads = new List<ElectricalLoad>();
+            foreach (var ld in panel.Loads)
+            {
+                if (ld == null) continue;
+                if (IsInvalidOrHeaderLoad(ld.LoadName))
+                {
+                    modified = true;
+                    continue;
+                }
+                cleanLoads.Add(ld);
+            }
+            if (modified)
+            {
+                panel.Loads = cleanLoads;
+                for (int i = 0; i < panel.Loads.Count; i++)
+                {
+                    panel.Loads[i].Stt = i + 1;
+                }
+                try
+                {
+                    ElectricalCalculator calc = new ElectricalCalculator();
+                    calc.CalculatePanel(panel);
+                }
+                catch { }
+            }
+        }
+
 
         private static readonly List<ElectricalPanel> _panels = new List<ElectricalPanel>();
+        private static bool _loadedFromDwg = false;
 
         static PanelStorageService()
 
@@ -36,6 +113,22 @@ namespace TaiAiAddin.Services
 
             InitDefaultPanels();
 
+        }
+
+        public static void EnsurePanelsLoadedFromActiveDwg()
+        {
+            try
+            {
+                var doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager != null ? Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument : null;
+                if (doc != null && !_loadedFromDwg)
+                {
+                    using (doc.LockDocument())
+                    {
+                        LoadPanelsFromDwg(doc.Database);
+                    }
+                }
+            }
+            catch { }
         }
 
         private static void InitDefaultPanels()
@@ -91,6 +184,7 @@ namespace TaiAiAddin.Services
         public static List<ElectricalPanel> GetAllPanels()
 
         {
+            EnsurePanelsLoadedFromActiveDwg();
 
             if (_panels.Count == 0) InitDefaultPanels();
 
@@ -137,14 +231,17 @@ namespace TaiAiAddin.Services
         {
 
             if (string.IsNullOrEmpty(name)) return null;
+            EnsurePanelsLoadedFromActiveDwg();
 
             foreach (ElectricalPanel p in _panels)
 
             {
 
                 if (string.Equals(p.PanelName, name, StringComparison.OrdinalIgnoreCase))
-
+                {
+                    SanitizePanel(p);
                     return p;
+                }
 
             }
 
@@ -152,29 +249,81 @@ namespace TaiAiAddin.Services
 
         }
 
-        public static void AddOrUpdatePanel(ElectricalPanel panel)
+        public static void UpsertPanelInMemory(ElectricalPanel panel)
+        {
+            if (panel == null || string.IsNullOrEmpty(panel.PanelName)) return;
+            for (int i = 0; i < _panels.Count; i++)
+            {
+                if (string.Equals(_panels[i].PanelName, panel.PanelName, StringComparison.OrdinalIgnoreCase))
+                {
+                    _panels[i] = panel;
+                    return;
+                }
+            }
+            _panels.Add(panel);
+        }
+
+                public static void RenamePanel(string oldName, string newName)
+        {
+            if (string.IsNullOrEmpty(oldName) || string.IsNullOrEmpty(newName) || oldName.Equals(newName, StringComparison.OrdinalIgnoreCase)) return;
+
+            for (int i = 0; i < _panels.Count; i++)
+            {
+                if (string.Equals(_panels[i].PanelName, oldName, StringComparison.OrdinalIgnoreCase))
+                {
+                    _panels[i].PanelName = newName;
+                    break;
+                }
+            }
+
+            try
+            {
+                var doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager != null ? Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument : null;
+                if (doc != null)
+                {
+                    using (doc.LockDocument())
+                    using (Transaction tr = doc.Database.TransactionManager.StartTransaction())
+                    {
+                        DBDictionary nod = (DBDictionary)tr.GetObject(doc.Database.NamedObjectsDictionaryId, OpenMode.ForWrite);
+                        if (nod.Contains(NodPanelsDictKey))
+                        {
+                            DBDictionary panelDict = (DBDictionary)tr.GetObject(nod.GetAt(NodPanelsDictKey), OpenMode.ForWrite);
+                            string oldKey = oldName.Trim().ToUpperInvariant();
+                            string newKey = newName.Trim().ToUpperInvariant();
+                            if (panelDict.Contains(oldKey))
+                            {
+                                ObjectId xid = panelDict.GetAt(oldKey);
+                                panelDict.Remove(oldKey);
+                                panelDict.SetAt(newKey, tr.GetObject(xid, OpenMode.ForWrite));
+                            }
+                        }
+                        tr.Commit();
+                    }
+                }
+            }
+            catch { }
+        }
+
+public static void AddOrUpdatePanel(ElectricalPanel panel)
 
         {
 
             if (panel == null || string.IsNullOrEmpty(panel.PanelName)) return;
 
-            for (int i = 0; i < _panels.Count; i++)
+            UpsertPanelInMemory(panel);
 
+            try
             {
-
-                if (string.Equals(_panels[i].PanelName, panel.PanelName, StringComparison.OrdinalIgnoreCase))
-
+                var doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager != null ? Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument : null;
+                if (doc != null)
                 {
-
-                    _panels[i] = panel;
-
-                    return;
-
+                    using (doc.LockDocument())
+                    {
+                        SavePanelToNod(doc.Database, panel);
+                    }
                 }
-
             }
-
-            _panels.Add(panel);
+            catch { }
 
         }
 
@@ -194,6 +343,33 @@ namespace TaiAiAddin.Services
 
                     _panels.RemoveAt(i);
 
+                    try
+                    {
+                        var doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager != null ? Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument : null;
+                        if (doc != null)
+                        {
+                            using (doc.LockDocument())
+                            using (Transaction tr = doc.Database.TransactionManager.StartTransaction())
+                            {
+                                DBDictionary nod = (DBDictionary)tr.GetObject(doc.Database.NamedObjectsDictionaryId, OpenMode.ForWrite);
+                                if (nod.Contains(NodPanelsDictKey))
+                                {
+                                    DBDictionary panelDict = (DBDictionary)tr.GetObject(nod.GetAt(NodPanelsDictKey), OpenMode.ForWrite);
+                                    string key = name.Trim().ToUpperInvariant();
+                                    if (panelDict.Contains(key))
+                                    {
+                                        ObjectId xid = panelDict.GetAt(key);
+                                        DBObject xrec = tr.GetObject(xid, OpenMode.ForWrite);
+                                        xrec.Erase();
+                                        panelDict.Remove(key);
+                                    }
+                                }
+                                tr.Commit();
+                            }
+                        }
+                    }
+                    catch { }
+
                     return true;
 
                 }
@@ -202,6 +378,133 @@ namespace TaiAiAddin.Services
 
             return false;
 
+        }
+
+        public static void SavePanelsToDwg(Database db)
+        {
+            if (db == null) return;
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    DBDictionary nod = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForWrite);
+                    DBDictionary panelDict;
+                    if (nod.Contains(NodPanelsDictKey))
+                    {
+                        panelDict = (DBDictionary)tr.GetObject(nod.GetAt(NodPanelsDictKey), OpenMode.ForWrite);
+                    }
+                    else
+                    {
+                        panelDict = new DBDictionary();
+                        nod.SetAt(NodPanelsDictKey, panelDict);
+                        tr.AddNewlyCreatedDBObject(panelDict, true);
+                    }
+
+                    foreach (ElectricalPanel p in _panels)
+                    {
+                        if (p == null || string.IsNullOrEmpty(p.PanelName)) continue;
+                        ResultBuffer rb = SerializePanelToXData(p, Point3d.Origin, p.DrawingParams);
+                        if (rb != null)
+                        {
+                            string key = p.PanelName.Trim().ToUpperInvariant();
+                            if (panelDict.Contains(key))
+                            {
+                                Xrecord xrec = (Xrecord)tr.GetObject(panelDict.GetAt(key), OpenMode.ForWrite);
+                                xrec.Data = rb;
+                            }
+                            else
+                            {
+                                Xrecord xrec = new Xrecord();
+                                xrec.Data = rb;
+                                panelDict.SetAt(key, xrec);
+                                tr.AddNewlyCreatedDBObject(xrec, true);
+                            }
+                        }
+                    }
+                    tr.Commit();
+                }
+            }
+            catch { }
+        }
+
+        public static void SavePanelToNod(Database db, ElectricalPanel panel)
+        {
+            if (db == null || panel == null || string.IsNullOrEmpty(panel.PanelName)) return;
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    DBDictionary nod = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForWrite);
+                    DBDictionary panelDict;
+                    if (nod.Contains(NodPanelsDictKey))
+                    {
+                        panelDict = (DBDictionary)tr.GetObject(nod.GetAt(NodPanelsDictKey), OpenMode.ForWrite);
+                    }
+                    else
+                    {
+                        panelDict = new DBDictionary();
+                        nod.SetAt(NodPanelsDictKey, panelDict);
+                        tr.AddNewlyCreatedDBObject(panelDict, true);
+                    }
+
+                    ResultBuffer rb = SerializePanelToXData(panel, Point3d.Origin, panel.DrawingParams);
+                    if (rb != null)
+                    {
+                        string key = panel.PanelName.Trim().ToUpperInvariant();
+                        if (panelDict.Contains(key))
+                        {
+                            Xrecord xrec = (Xrecord)tr.GetObject(panelDict.GetAt(key), OpenMode.ForWrite);
+                            xrec.Data = rb;
+                        }
+                        else
+                        {
+                            Xrecord xrec = new Xrecord();
+                            xrec.Data = rb;
+                            panelDict.SetAt(key, xrec);
+                            tr.AddNewlyCreatedDBObject(xrec, true);
+                        }
+                    }
+                    tr.Commit();
+                }
+            }
+            catch { }
+        }
+
+        public static List<ElectricalPanel> LoadPanelsFromDwg(Database db)
+        {
+            if (db == null) return _panels;
+            try
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    DBDictionary nod = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
+                    if (nod.Contains(NodPanelsDictKey))
+                    {
+                        DBDictionary panelDict = (DBDictionary)tr.GetObject(nod.GetAt(NodPanelsDictKey), OpenMode.ForRead);
+                        foreach (DBDictionaryEntry entry in panelDict)
+                        {
+                            if (entry.Value.IsValid && !entry.Value.IsErased)
+                            {
+                                Xrecord xrec = tr.GetObject(entry.Value, OpenMode.ForRead) as Xrecord;
+                                if (xrec != null && xrec.Data != null)
+                                {
+                                    Point3d dummy;
+                                    ElectricalPanel p = DeserializePanelFromXData(xrec.Data, out dummy);
+                                    if (p != null && !string.IsNullOrEmpty(p.PanelName))
+                                    {
+                                        SanitizePanel(p);
+                                        UpsertPanelInMemory(p);
+                                        _loadedFromDwg = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    tr.Commit();
+                }
+            }
+            catch { }
+            return _panels;
         }
 
         /// <summary>

@@ -314,9 +314,9 @@ namespace TaiAiAddin.Services
                 @"C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\python.exe"
             };
 
-            for (int i = 0; i < candidates.Length; i++)
+            foreach (string c in candidates)
             {
-                if (File.Exists(candidates[i])) return candidates[i];
+                if (File.Exists(c)) return c;
             }
 
             return "python.exe";
@@ -325,20 +325,31 @@ namespace TaiAiAddin.Services
         private static string FindBoundaryEngineScript()
         {
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string asmDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
-            string[] candidates = new string[]
+            List<string> candidates = new List<string>
             {
-                Path.Combine(asmDir, "Scripts", "boundary_engine.py"),
-                Path.Combine(asmDir, "boundary_engine.py"),
                 Path.Combine(appData, @"Autodesk\ApplicationPlugins\TaiAiAddin.bundle\Contents\Scripts\boundary_engine.py"),
                 @"D:\01. NGUYEN TAN TAI\CODING AI\00.BAI 1_TOOLS\TaiAiAddin\Scripts\boundary_engine.py",
                 @"D:\01. NGUYEN TAN TAI\CODING AI\SKILL XU LY MAT BANG\skills\smart-room-boundary\scripts\boundary_engine.py"
             };
 
-            for (int i = 0; i < candidates.Length; i++)
+            try
             {
-                if (File.Exists(candidates[i])) return candidates[i];
+                string asmLoc = Assembly.GetExecutingAssembly().Location;
+                if (!string.IsNullOrEmpty(asmLoc))
+                {
+                    string asmDir = Path.GetDirectoryName(asmLoc);
+                    if (!string.IsNullOrEmpty(asmDir))
+                    {
+                        candidates.Insert(0, Path.Combine(asmDir, "boundary_engine.py"));
+                        candidates.Insert(0, Path.Combine(asmDir, "Scripts", "boundary_engine.py"));
+                    }
+                }
+            }
+            catch { }
+
+            foreach (string c in candidates)
+            {
+                if (File.Exists(c)) return c;
             }
 
             return "";

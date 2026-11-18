@@ -51,13 +51,25 @@ namespace TaiAiAddin.Services
                 return _cachedTdDwgPath;
             }
 
-            string asmDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            string relBlocks = Path.Combine(asmDir, "..", "Blocks", "TD.dwg");
-            if (File.Exists(relBlocks))
+            try
             {
-                _cachedTdDwgPath = Path.GetFullPath(relBlocks);
-                return _cachedTdDwgPath;
+                string asmLoc = "";
+                try { asmLoc = System.Reflection.Assembly.GetExecutingAssembly().Location; } catch { }
+                if (!string.IsNullOrEmpty(asmLoc))
+                {
+                    string asmDir = Path.GetDirectoryName(asmLoc);
+                    if (!string.IsNullOrEmpty(asmDir))
+                    {
+                        string relBlocks = Path.Combine(asmDir, "..", "Blocks", "TD.dwg");
+                        if (File.Exists(relBlocks))
+                        {
+                            _cachedTdDwgPath = Path.GetFullPath(relBlocks);
+                            return _cachedTdDwgPath;
+                        }
+                    }
+                }
             }
+            catch { }
 
             return null;
         }
@@ -100,9 +112,17 @@ namespace TaiAiAddin.Services
 
             try
             {
-                string asmDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                string relB = Path.Combine(asmDir, "..", "Blocks", fileName);
-                if (File.Exists(relB)) return Path.GetFullPath(relB);
+                string asmLoc = "";
+                try { asmLoc = System.Reflection.Assembly.GetExecutingAssembly().Location; } catch { }
+                if (!string.IsNullOrEmpty(asmLoc))
+                {
+                    string asmDir = Path.GetDirectoryName(asmLoc);
+                    if (!string.IsNullOrEmpty(asmDir))
+                    {
+                        string relB = Path.Combine(asmDir, "..", "Blocks", fileName);
+                        if (File.Exists(relB)) return Path.GetFullPath(relB);
+                    }
+                }
             }
             catch { }
 

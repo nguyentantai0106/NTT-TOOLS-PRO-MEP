@@ -1,0 +1,223 @@
+<Window x:Class="TaiAiAddin.Views.CustomBlockDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="NTT TOOLS | BẢNG THÔNG SỐ ĐÓNG GÓI BLOCK"
+        Height="540" Width="530"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#0F1219"
+        Foreground="#F8FAFC"
+        FontFamily="Segoe UI"
+        WindowStyle="SingleBorderWindow">
+    <Window.Resources>
+        <Style x:Key="DialogCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="#161B26"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderBrush" Value="#252D3D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12"/>
+        </Style>
+
+        <!-- Dark Mode High-Contrast ComboBox Styles (WCAG AAA) -->
+        <ControlTemplate x:Key="DarkComboBoxToggleButton" TargetType="ToggleButton">
+            <Grid HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="22" />
+                </Grid.ColumnDefinitions>
+                <Border x:Name="Border" Grid.ColumnSpan="2" CornerRadius="5"
+                        Background="#1E2433" BorderBrush="#333D54" BorderThickness="1.2" />
+                <Path x:Name="Arrow" Grid.Column="1" Fill="#00E5FF" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Data="M 0 0 L 4 4 L 8 0 Z" />
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Border" Property="BorderBrush" Value="#00E5FF" />
+                    <Setter TargetName="Border" Property="Background" Value="#2A3246" />
+                </Trigger>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter TargetName="Border" Property="BorderBrush" Value="#00E5FF" />
+                    <Setter TargetName="Border" Property="Background" Value="#2A3246" />
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <Style x:Key="DarkComboBoxItem" TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="#F8FAFC" />
+            <Setter Property="Background" Value="#1E2433" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2A3246" />
+                                <Setter Property="TextElement.Foreground" Value="#00E5FF" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2A3246" />
+                                <Setter Property="TextElement.Foreground" Value="#00E5FF" />
+                                <Setter Property="FontWeight" Value="Bold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DarkComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="#00E5FF" />
+            <Setter Property="TextElement.Foreground" Value="#00E5FF" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource DarkComboBoxItem}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid HorizontalAlignment="Stretch">
+                            <ToggleButton Name="ToggleButton" Template="{StaticResource DarkComboBoxToggleButton}" 
+                                          Focusable="False" IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" 
+                                          ClickMode="Press" HorizontalAlignment="Stretch" />
+                            <ContentPresenter Name="ContentSite" IsHitTestVisible="False" 
+                                              TextElement.Foreground="#00E5FF"
+                                              Content="{TemplateBinding SelectionBoxItem}" 
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" 
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" 
+                                              Margin="8,2,24,2" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                            <Popup Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" 
+                                   AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                <Grid Name="DropDown" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="220" Margin="0,3,0,0">
+                                    <Border Name="DropDownBorder" Background="#1E2433" BorderBrush="#00E5FF" BorderThickness="1.2" CornerRadius="5">
+                                        <ScrollViewer Margin="2" SnapsToDevicePixels="True">
+                                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Margin="0,0,0,10" Background="#1A202C" CornerRadius="6" Padding="12,10" BorderBrush="#00E5FF" BorderThickness="1,0,0,0">
+            <DockPanel LastChildFill="True">
+                <TextBlock Text="📦" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                <StackPanel>
+                    <TextBlock Text="BẢNG THÔNG SỐ ĐÓNG GÓI BLOCK CHUẨN HÓA" FontWeight="Bold" FontSize="13" Foreground="#00E5FF"/>
+                    <TextBlock Text="Tự động trích xuất kích thước CAD và sinh tên Block theo công thức quy chuẩn" FontSize="10.5" Foreground="#94A3B8"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Body Form -->
+        <StackPanel Grid.Row="1">
+            <!-- Group 1: Phân Loại & Tên Block -->
+            <Border Style="{StaticResource DialogCardStyle}" Margin="0,0,0,10">
+                <StackPanel>
+                    <TextBlock Text="1. PHÂN LOẠI &amp; CHI TIẾT CÔNG NĂNG" FontWeight="Bold" FontSize="11" Foreground="#FF9100" Margin="0,0,0,8"/>
+                    
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                            <TextBlock Text="Loại Block (Category):" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                            <ComboBox x:Name="cboCategory" Style="{StaticResource DarkComboBoxStyle}" Height="28" SelectionChanged="CboCategory_SelectionChanged"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                            <TextBlock Text="Tên Block (Subcategory):" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                            <ComboBox x:Name="cboSubcategory" Style="{StaticResource DarkComboBoxStyle}" Height="28" SelectionChanged="CboSubcategory_SelectionChanged"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Margin="0,0,0,2">
+                        <TextBlock Text="Loại Chi Tiết (Detail Type):" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cboDetailType" Style="{StaticResource DarkComboBoxStyle}" Height="28" SelectionChanged="CboDetailType_SelectionChanged"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Group 2: Kích thước & Layer -->
+            <Border Style="{StaticResource DialogCardStyle}" Margin="0,0,0,10">
+                <StackPanel>
+                    <TextBlock Text="2. KÍCH THƯỚC (mm) &amp; LAYER ĐÍCH" FontWeight="Bold" FontSize="11" Foreground="#00E5FF" Margin="0,0,0,8"/>
+                    
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                            <TextBlock Text="Chiều rộng W (mm):" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                            <TextBox x:Name="txtWidth" Text="1000" Background="#1E2433" Foreground="#00E5FF" FontWeight="Bold" Padding="6,4" BorderBrush="#333D54" BorderThickness="1.2" TextChanged="Dimension_TextChanged"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Margin="4,0,4,0">
+                            <TextBlock Text="Chiều cao H (mm):" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                            <TextBox x:Name="txtHeight" Text="2200" Background="#1E2433" Foreground="#00E5FF" FontWeight="Bold" Padding="6,4" BorderBrush="#333D54" BorderThickness="1.2" TextChanged="Dimension_TextChanged"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Margin="4,0,0,0">
+                            <TextBlock Text="Độ dày D (mm):" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                            <TextBox x:Name="txtDepth" Text="100" Background="#1E2433" Foreground="#00E5FF" FontWeight="Bold" Padding="6,4" BorderBrush="#333D54" BorderThickness="1.2" TextChanged="Dimension_TextChanged"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                            <TextBlock Text="Layer đích sau khi đóng gói:" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                            <ComboBox x:Name="cboTargetLayer" Style="{StaticResource DarkComboBoxStyle}" Height="28"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                            <TextBlock Text="Điểm gốc Pickpoint (Base Point):" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                            <TextBox Text="Góc Dưới Trái (MinX, MinY)" IsReadOnly="True" Background="#1E2433" Foreground="#00E676" FontWeight="SemiBold" Padding="6,4" BorderBrush="#333D54" BorderThickness="1.2"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Group 3: Xem trước tên block -->
+            <Border Background="#1A202C" CornerRadius="6" Padding="12,10" BorderBrush="#00E676" BorderThickness="1">
+                <DockPanel LastChildFill="True">
+                    <TextBlock Text="🏷️ Tên Block dự kiến:" FontSize="11" Foreground="#94A3B8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="txtPreviewBlockName" Text="CUA_CUADI_1CANH_1000x2200x100" FontWeight="Bold" FontSize="12.5" Foreground="#00E676" VerticalAlignment="Center"/>
+                </DockPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- Footer Buttons -->
+        <Border Grid.Row="2" Margin="0,10,0,0" Padding="0,4,0,0">
+            <DockPanel LastChildFill="False">
+                <Button Content="Hủy Bỏ" Width="100" Padding="0,7" Background="#1E2433" Foreground="#94A3B8" BorderBrush="#333D54" FontWeight="SemiBold" Click="BtnCancel_Click" DockPanel.Dock="Left"/>
+                <Button Content="📦 ĐÓNG GÓI BLOCK (TẠO INSERT)" Padding="18,7" Background="#FF9100" Foreground="#000000" FontWeight="Bold" Click="BtnConfirm_Click" DockPanel.Dock="Right"/>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

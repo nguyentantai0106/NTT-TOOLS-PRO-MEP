@@ -1,0 +1,176 @@
+<UserControl x:Class="TaiAiAddin.Views.Tabs.CableTrayTabControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="550" d:DesignWidth="360">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Themes/Theme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{DynamicResource FluidCardStyle}" HorizontalAlignment="Stretch" Margin="0,0,0,8">
+        <StackPanel HorizontalAlignment="Stretch">
+            <DockPanel Margin="0,0,0,8" HorizontalAlignment="Stretch">
+                <TextBlock Text="⚡ THIẾT KẾ &amp; VẼ THANG MÁNG CÁP (TMC)" FontWeight="Bold" FontSize="11.5" Foreground="{DynamicResource AccentCyan}"/>
+                <Border Background="#FF9100" CornerRadius="3" Padding="4,1" VerticalAlignment="Center">
+                    <TextBlock Text="DYNAMIC BLOCK" FontSize="8.5" FontWeight="Bold" Foreground="#12161F"/>
+                </Border>
+            </DockPanel>
+
+            <!-- Loại Máng Cáp (Ẩn đi vì đã chuyển thành 3 nút bấm trực tiếp bên ngoài) -->
+            <ComboBox x:Name="cbTmcType" Visibility="Collapsed">
+                <ComboBoxItem Content="Máng cáp (Cable Trunking - Kín trơn có nắp)" IsSelected="True"/>
+                <ComboBoxItem Content="Thang cáp (Cable Ladder - Bậc thang đều 250mm)"/>
+                <ComboBoxItem Content="Khay cáp (Perforated Tray - Đột lỗ thoát nhiệt)"/>
+            </ComboBox>
+
+            <!-- Thông số Kích thước W x H -->
+            <Grid Margin="0,0,0,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="6"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Bề rộng W (mm):" FontSize="9.5" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,2"/>
+                    <ComboBox x:Name="cbTmcWidth" Style="{DynamicResource DarkComboBoxStyle}" IsEditable="True"
+                              SelectionChanged="OnTmcDimensionSelectionChanged" LostFocus="OnTmcDimensionChanged">
+                        <ComboBoxItem Content="100"/>
+                        <ComboBoxItem Content="150"/>
+                        <ComboBoxItem Content="200"/>
+                        <ComboBoxItem Content="250"/>
+                        <ComboBoxItem Content="300" IsSelected="True"/>
+                        <ComboBoxItem Content="350"/>
+                        <ComboBoxItem Content="400"/>
+                        <ComboBoxItem Content="450"/>
+                        <ComboBoxItem Content="500"/>
+                        <ComboBoxItem Content="600"/>
+                        <ComboBoxItem Content="800"/>
+                        <ComboBoxItem Content="1000"/>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Chiều cao H (mm):" FontSize="9.5" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,2"/>
+                    <ComboBox x:Name="cbTmcHeight" Style="{DynamicResource DarkComboBoxStyle}" IsEditable="True"
+                              SelectionChanged="OnTmcDimensionSelectionChanged" LostFocus="OnTmcDimensionChanged">
+                        <ComboBoxItem Content="50"/>
+                        <ComboBoxItem Content="75"/>
+                        <ComboBoxItem Content="100" IsSelected="True"/>
+                        <ComboBoxItem Content="150"/>
+                        <ComboBoxItem Content="200"/>
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+
+            <!-- Nút cập nhật kích thước Block đang chọn -->
+            <Button x:Name="btnUpdateSelectedTmc" Content="🔄 Cập Nhật Kích Thước Block Đang Chọn" 
+                    Style="{DynamicResource FluidConfigButtonStyle}" 
+                    Background="#00838F" Foreground="White" BorderThickness="0"
+                    Click="BtnUpdateSelectedTmc_Click" Margin="0,0,0,8"
+                    ToolTip="Cập nhật kích thước Block Thang Máng Cáp trên bản vẽ theo đúng thông số W x H vừa chọn (Lệnh NTTTMCUPDATE)"/>
+
+            <!-- Khối thông số nâng cao (Khoảng cách giá treo, độ dày tôn) -->
+            <Border Style="{DynamicResource FluidSubCardStyle}" Margin="0,0,0,8" Padding="6,6">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Khoảng cách đỡ (m):" FontSize="9" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,2"/>
+                            <TextBox x:Name="txtTmcSupportSpacing" Style="{DynamicResource DarkTextBoxStyle}" Text="1.5" FontSize="10"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Độ dày tôn (mm):" FontSize="9" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,2"/>
+                            <TextBox x:Name="txtTmcThickness" Style="{DynamicResource DarkTextBoxStyle}" Text="1.5" FontSize="10"/>
+                        </StackPanel>
+                    </Grid>
+                    <CheckBox x:Name="chkTmcInsertSupports" Content="Tự động rải Block giá treo Unistrut" 
+                              IsChecked="True" Foreground="{DynamicResource TextPrimary}" FontSize="9.5" Margin="0,2,0,2"/>
+                    <CheckBox x:Name="chkTmcAddAnnotations" Content="Tự động đánh nhãn kích thước WxH" 
+                              IsChecked="True" Foreground="{DynamicResource TextPrimary}" FontSize="9.5"/>
+                </StackPanel>
+            </Border>
+
+            <!-- 3 Nút Vẽ TMC theo từng loại: Khay cáp, Trunking, Thang điện -->
+            <Grid Margin="0,0,0,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="4"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="4"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Nút 1: Khay Cáp -->
+                <Button Grid.Column="0" x:Name="btnDrawTray" 
+                        Style="{DynamicResource PrimaryCyanButtonStyle}" 
+                        Click="BtnDrawTray_Click" 
+                        Padding="2,7"
+                        ToolTip="Vẽ Khay Cáp (Perforated Cable Tray) kéo dãn Live Jig thời gian thực (Lệnh NTTTMC)">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="⊞" FontSize="13" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Khay Cáp" FontWeight="Bold" FontSize="11" Margin="0,2,0,0" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Nút 2: Trunking -->
+                <Button Grid.Column="2" x:Name="btnDrawTrunking" 
+                        Style="{DynamicResource PrimaryCyanButtonStyle}" 
+                        Click="BtnDrawTrunking_Click" 
+                        Padding="2,7"
+                        ToolTip="Vẽ Máng Cáp (Cable Trunking) kín trơn kéo dãn Live Jig thời gian thực (Lệnh NTTTMC)">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="▬" FontSize="13" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Trunking" FontWeight="Bold" FontSize="11" Margin="0,2,0,0" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Nút 3: Thang Điện -->
+                <Button Grid.Column="4" x:Name="btnDrawLadder" 
+                        Style="{DynamicResource PrimaryCyanButtonStyle}" 
+                        Click="BtnDrawLadder_Click" 
+                        Padding="2,7"
+                        ToolTip="Vẽ Thang Điện (Cable Ladder) bậc thang 250mm kéo dãn Live Jig thời gian thực (Lệnh NTTTMC)">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="🪜" FontSize="13" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Thang Điện" FontWeight="Bold" FontSize="11" Margin="0,2,0,0" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- Nút vẽ tự động theo Polyline -->
+            <Button x:Name="btnRouteTmcAlongPl" 
+                    Style="{DynamicResource FluidConfigButtonStyle}" 
+                    Background="#E65100" Foreground="White" BorderThickness="0"
+                    Click="BtnRouteTmcAlongPl_Click" Margin="0,0,0,6"
+                    Padding="8,6"
+                    ToolTip="Chọn đường Polyline tim máng: Tự động chạy Block động, bo co 90/45 và rải giá treo 1.5m (Lệnh NTTTMCROUTE)">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="⚡" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Vẽ Tuyến TMC Theo Polyline (Tự Bo Co &amp; Giá Đỡ)" FontWeight="SemiBold" FontSize="11"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Nút xuất bảng bóc tách khối lượng -->
+            <Button x:Name="btnDrawTmcBOMTable" Content="📋 Xuất Bảng Bóc Tách Khối Lượng Vào CAD" 
+                    Style="{DynamicResource FluidConfigButtonStyle}" 
+                    Click="BtnDrawTmcBOMTable_Click" Margin="0,0,0,4"
+                    ToolTip="Bóc tách tổng chiều dài, số lượng phụ kiện co/cút, số giá treo và xuất Table CAD (Lệnh NTTTMCBOM)"/>
+
+            <!-- Nút mở thư viện block Điện / Thang máng -->
+            <Button x:Name="btnOpenTmcFolder" Content="📂 Mở Thư Viện Block Thang Máng Cáp" 
+                    Style="{DynamicResource FluidConfigButtonStyle}" 
+                    Click="BtnOpenTmcFolder_Click" Margin="0,0,0,2"
+                    ToolTip="Mở thư mục chứa các Block DWG Thang máng, co lượn, tê cút, giá treo"/>
+        </StackPanel>
+    </Border>
+</UserControl>

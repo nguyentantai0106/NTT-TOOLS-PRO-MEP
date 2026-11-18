@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -652,25 +652,12 @@ namespace TaiAiAddin.Services
                 }
 
                 case "smart_boundary":
+                case "copilot_room_boundary":
                 {
-                    RoomBoundaryOptions opts = new RoomBoundaryOptions();
-                    RoomBoundaryResult res = SmartRoomBoundaryService.ExecuteRoomBoundary(doc, opts);
-                    if (res != null && res.Success)
-                    {
-                        Dictionary<string, object> bRes = new Dictionary<string, object>();
-                        bRes.Add("success", true);
-                        bRes.Add("roomCount", res.RoomCount);
-                        bRes.Add("totalAreaM2", res.TotalAreaM2);
-                        bRes.Add("message", "Đã quét và bo viền phòng thành công!");
-                        return bRes;
-                    }
-                    else
-                    {
-                        Dictionary<string, object> errBRes = new Dictionary<string, object>();
-                        errBRes.Add("success", false);
-                        errBRes.Add("error", res != null ? res.Message : "Lỗi khi xử lý Smart Boundary.");
-                        return errBRes;
-                    }
+                    Dictionary<string, object> bRes = new Dictionary<string, object>();
+                    bRes.Add("success", true);
+                    bRes.Add("message", "Chức năng bao phòng cũ đã được tinh giản. Vui lòng sử dụng Tiền xử lý mặt bằng (TIENXULYMB).");
+                    return bRes;
                 }
 
                 case "run_command":

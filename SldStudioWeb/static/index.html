@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NTT SLD STUDIO — Thiết Kế Sơ Đồ Nguyên Lý Tủ Điện</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-badge">NTT</div>
+      <div class="brand-title">
+        <h1>NTT SLD STUDIO — THIẾT KẾ SƠ ĐỒ NGUYÊN LÝ TỦ ĐIỆN</h1>
+        <p>Đa thiết bị (PC / Mac / Tablet / Mobile) • Cân pha tự động • Y-Δ / VFD / SS • Sụt áp TCVN • AutoCAD Bridge</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-pill" id="lanPill" title="Mở URL này trên điện thoại hoặc iPad cùng mạng Wi-Fi">
+        <span>🌐 LAN:</span>
+        <strong class="mono" id="lanUrlText">...</strong>
+      </div>
+      <div class="status-pill" id="cadStatusPill">
+        <span class="status-dot" id="cadDot"></span>
+        <span id="cadStatusText">Đang kiểm tra AutoCAD...</span>
+      </div>
+      <input type="file" id="excelFileInput" accept=".xlsx" style="display:none" />
+      <input type="file" id="jsonFileInput" accept=".json" style="display:none" />
+      <button class="btn" id="btnImportExcel">📥 Nhập Excel</button>
+      <button class="btn" id="btnTemplateExcel">📄 Mẫu Excel</button>
+      <button class="btn" id="btnExportExcel">📤 Xuất Excel (.xlsx)</button>
+      <button class="btn btn-amber" id="btnOptimizeCables">⚡ Tối Ưu Cáp</button>
+      <button class="btn btn-primary" id="btnBalancePhases">⚖️ Cân Pha Tự Động</button>
+    </div>
+  </header>
+
+  <section class="panel-bar">
+    <div class="field-inline">
+      <label>Chọn Tủ:</label>
+      <select id="selPanel" style="min-width:140px"></select>
+    </div>
+    <button class="btn btn-sm" id="btnAddPanel">➕ Thêm Tủ</button>
+    <button class="btn btn-sm" id="btnClonePanel">📋 Nhân Bản</button>
+    <button class="btn btn-sm btn-danger" id="btnDeletePanel">🗑️ Xóa</button>
+
+    <div class="field-inline">
+      <label>Tên Tủ:</label>
+      <input type="text" id="inpPanelName" style="width:110px" />
+    </div>
+    <div class="field-inline">
+      <label>Từ Tủ:</label>
+      <input type="text" id="inpParentPanel" style="width:85px" />
+    </div>
+    <div class="field-inline">
+      <label>Kđt:</label>
+      <input type="number" id="inpKdt" step="0.05" min="0.1" max="1" style="width:65px" class="mono" />
+    </div>
+    <div class="field-inline">
+      <label>Cosφ:</label>
+      <input type="number" id="inpCosPhi" step="0.01" min="0.5" max="1" style="width:65px" class="mono" />
+    </div>
+    <div class="field-inline">
+      <label>Nguồn:</label>
+      <select id="selIncomer">
+        <option value="SingleNormal">1 Nguồn EVN</option>
+        <option value="DualATS">2 Nguồn ATS (EVN + GEN)</option>
+        <option value="DualInterlock">2 Nguồn Khóa Liên Động</option>
+        <option value="BusCoupler">Liên Lạc Thanh Cái (Bus Coupler)</option>
+      </select>
+    </div>
+    <label class="check-label"><input type="checkbox" id="chkCapBank" /> Tụ Bù</label>
+    <label class="check-label"><input type="checkbox" id="chkLegend" /> Bảng Chú Thích</label>
+    <label class="check-label"><input type="checkbox" id="chkTitleBlock" /> Khung Tên A3</label>
+  </section>
+
+  <nav class="tabs-nav">
+    <button class="tab-btn active" data-tab="tabLoads">📋 Danh Sách Phụ Tải &amp; Cáp / CB</button>
+    <button class="tab-btn" data-tab="tabPreview">📐 Preview Xem Trước Sơ Đồ Nguyên Lý</button>
+    <button class="tab-btn" data-tab="tabRiser">🌳 Cây Riser Phân Phối</button>
+  </nav>
+
+  <main class="main-content">
+    <!-- TAB 1: DANH SÁCH PHỤ TẢI -->
+    <div class="tab-pane active" id="tabLoads">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Tổng Công Suất Đặt (Pđặt)</div>
+          <div class="kpi-val" id="kpiPdat">0 kW</div>
+          <div class="kpi-sub" id="kpiLoadCount">0 lộ phụ tải</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Công Suất Tính Toán (Ptt)</div>
+          <div class="kpi-val" id="kpiPtt">0 kW</div>
+          <div class="kpi-sub" id="kpiCapBank">Không có tụ bù</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Dòng Điện Tính Toán (Itt)</div>
+          <div class="kpi-val" id="kpiItt">0 A</div>
+          <div class="kpi-sub" id="kpiMainCb">MCCB 3P-32A</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Cân Bằng Pha (R / Y / B)</div>
+          <div class="kpi-val" id="kpiUnbalance">0%</div>
+          <div class="kpi-sub mono" id="kpiPhasePowers">0 / 0 / 0 kW</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Cáp Tổng Đề Xuất</div>
+          <div class="kpi-val" style="font-size:13px; color:var(--amber)" id="kpiMainCable">-</div>
+          <div class="kpi-sub">TCVN 9207 / IEC 60364</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <strong>Bảng Phụ Tải Chi Tiết</strong>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-sm btn-primary" id="btnAddLoad">➕ Thêm Lộ Tải</button>
+            <button class="btn btn-sm" id="btnSaveJson">💾 Lưu Dự Án (.json)</button>
+            <button class="btn btn-sm" id="btnLoadJson">📂 Mở Dự Án (.json)</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:45px">STT</th>
+                <th style="width:70px">Lộ</th>
+                <th style="min-width:190px">Tên Phụ Tải</th>
+                <th style="width:80px">P (kW)</th>
+                <th style="width:85px">Số Pha</th>
+                <th style="width:75px">Pha Gán</th>
+                <th style="width:70px">Itt (A)</th>
+                <th style="width:95px">Loại CB</th>
+                <th style="min-width:165px">Quy Cách CB</th>
+                <th style="min-width:210px">Cáp / Dây Dẫn</th>
+                <th style="width:70px">Dài (m)</th>
+                <th style="width:70px">ΔU (%)</th>
+                <th style="width:110px">Khởi Động</th>
+                <th style="width:110px">Điều Khiển</th>
+                <th style="width:45px">Xóa</th>
+              </tr>
+            </thead>
+            <tbody id="loadsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: PREVIEW SLD -->
+    <div class="tab-pane" id="tabPreview">
+      <div class="preview-controls">
+        <div class="field-inline">
+          <label>📐 Bố Cục:</label>
+          <select id="selLayoutScheme">
+            <option value="LayoutBasic">Lựa chọn 1: LAYOUT BASIC (Sơ đồ dọc truyền thống)</option>
+            <option value="SouthRegion" selected>Lựa chọn 2: Kiểu Miền Nam (Chuẩn IEC / EVN SPC)</option>
+            <option value="NorthRegion">Lựa chọn 3: Kiểu Miền Bắc (Chuẩn TCVN / EVN NPC)</option>
+            <option value="SldV2Mcc">Lựa chọn 4: SDNL V2 (Tủ Động Lực MCC / PCCC)</option>
+          </select>
+        </div>
+        <div class="field-inline" id="wrapOrientation">
+          <label>🔄 Hướng:</label>
+          <select id="selOrientation">
+            <option value="VerticalTopDown">⬇️ Cây Đứng (Dọc)</option>
+            <option value="HorizontalLeftRight" selected>➡️ Cây Ngang (Riser)</option>
+          </select>
+        </div>
+        <label class="check-label"><input type="checkbox" id="chkFuse" checked /> Cầu chì (FUSE)</label>
+        <label class="check-label"><input type="checkbox" id="chkLamps" checked /> Đèn báo pha</label>
+        <label class="check-label"><input type="checkbox" id="chkRelay" checked /> Rơ le bảo vệ</label>
+        <label class="check-label"><input type="checkbox" id="chkMct" checked /> 3xMCT &amp; PM</label>
+        <label class="check-label"><input type="checkbox" id="chkSpd" checked /> Chống sét SPD</label>
+        <label class="check-label"><input type="checkbox" id="chkSpare" /> Lộ dự phòng</label>
+        <div style="margin-left:auto; display:flex; gap:6px; align-items:center;">
+          <button class="btn btn-sm" id="btnZoomOut">➖</button>
+          <span class="mono" id="zoomPctText" style="font-size:11.5px; min-width:42px; text-align:center;">100%</span>
+          <button class="btn btn-sm" id="btnZoomIn">➕</button>
+          <button class="btn btn-sm" id="btnZoomReset">1:1</button>
+        </div>
+      </div>
+
+      <div class="canvas-stage" id="canvasStage">
+        <canvas id="sldCanvas" width="1280" height="760"></canvas>
+      </div>
+    </div>
+
+    <!-- TAB 3: CÂY RISER -->
+    <div class="tab-pane" id="tabRiser">
+      <div class="card" style="padding:14px;">
+        <div class="card-header" style="padding:0 0 10px 0; margin-bottom:12px;">
+          <strong>🌳 Sơ Đồ Cây Phân Phối Điện Toàn Dự Án (Riser Hierarchy)</strong>
+        </div>
+        <div class="canvas-stage" style="min-height:420px;">
+          <canvas id="riserCanvas" width="1100" height="520"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-status" id="footerStatus">Sẵn sàng. Mọi thay đổi đều tự động tính toán theo tiêu chuẩn TCVN / IEC.</div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <label class="check-label"><input type="checkbox" id="chkPickPoint" checked /> Click chọn điểm đặt trên CAD</label>
+      <button class="btn btn-success" id="btnDrawCad">📐 Vẽ Sơ Đồ Nguyên Lý Vào AutoCAD</button>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

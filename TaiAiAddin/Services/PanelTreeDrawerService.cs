@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using Autodesk.AutoCAD.ApplicationServices;
@@ -86,6 +86,7 @@ namespace TaiAiAddin.Services
                         }
 
                         // Gắn dữ liệu cấu hình đầy đủ của tủ vào thực thể đầu tiên
+                        ResultBuffer fullRb = PanelStorageService.SerializePanelToXData(panel, origin, p);
                         if (_currentDrawnEntities.Count > 0)
                         {
                             try
@@ -93,20 +94,21 @@ namespace TaiAiAddin.Services
                                 DBObject mainEnt = tr.GetObject(_currentDrawnEntities[0], OpenMode.ForWrite);
                                 if (mainEnt != null)
                                 {
-                                    mainEnt.XData = PanelStorageService.SerializePanelToXData(panel, origin, p);
+                                    mainEnt.XData = fullRb;
                                 }
                             }
                             catch { }
                         }
 
-                        // Gắn XData nhận diện panelName lên tất cả các đối tượng đã vẽ
+                        // Gắn XData nhận diện panelName lên tất cả các đối tượng đã vẽ (bắt đầu từ index 1 để không đè index 0)
                         ResultBuffer idRb = new ResultBuffer(
                             new TypedValue((int)DxfCode.ExtendedDataRegAppName, PanelStorageService.RegAppName),
                             new TypedValue((int)DxfCode.ExtendedDataAsciiString, panel.PanelName)
                         );
 
-                        foreach (ObjectId id in _currentDrawnEntities)
+                        for (int i = 1; i < _currentDrawnEntities.Count; i++)
                         {
+                            ObjectId id = _currentDrawnEntities[i];
                             if (id.IsValid && !id.IsNull && !id.IsErased)
                             {
                                 try
@@ -139,6 +141,14 @@ namespace TaiAiAddin.Services
                         }
                         groupDict.SetAt(cleanName, newG);
                         tr.AddNewlyCreatedDBObject(newG, true);
+                        try
+                        {
+                            newG.XData = fullRb;
+                        }
+                        catch { }
+
+                        // Lưu đồng bộ vào NamedObjectDictionary (NOD) của bản vẽ DWG
+                        PanelStorageService.SavePanelToNod(db, panel);
                     }
                     catch { }
 
@@ -261,7 +271,9 @@ namespace TaiAiAddin.Services
         {
             try
             {
-                string asmDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                string asmLoc = "";
+                try { asmLoc = System.Reflection.Assembly.GetExecutingAssembly().Location; } catch { }
+                string asmDir = !string.IsNullOrEmpty(asmLoc) ? Path.GetDirectoryName(asmLoc) : "";
                 DirectoryInfo parentInfo = !string.IsNullOrEmpty(asmDir) ? Directory.GetParent(asmDir) : null;
                 string parentDir = parentInfo != null ? parentInfo.FullName : "";
 
@@ -322,6 +334,67 @@ namespace TaiAiAddin.Services
                     ImportBlockFromDwg(db, bName, dwgPath);
                 }
             }
+        }
+
+        public static ObjectId GetOrLoadRcboBlock(Database db)
+        {
+            if (db == null) return ObjectId.Null;
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                if (bt.Has("RCBO")) return bt["RCBO"];
+                tr.Commit();
+            }
+
+            List<string> searchPaths = new List<string>();
+            searchPaths.Add(@"D:\01. NGUYEN TAN TAI\CODING AI\00.BAI 1_TOOLS\Thư Viện\Điện\RCBO.dwg");
+            searchPaths.Add(@"D:\01. NGUYEN TAN TAI\CODING AI\00.BAI 1_TOOLS\TaiAiAddin.bundle\Contents\Thư Viện\Điện\RCBO.dwg");
+            searchPaths.Add(@"D:\01. NGUYEN TAN TAI\CODING AI\00.BAI 1_TOOLS\TaiAiAddin.bundle\Contents\RCBO.dwg");
+
+            try
+            {
+                string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                if (!string.IsNullOrEmpty(appData))
+                {
+                    searchPaths.Add(Path.Combine(appData, @"Autodesk\ApplicationPlugins\TaiAiAddin.bundle\Contents\Thư Viện\Điện\RCBO.dwg"));
+                    searchPaths.Add(Path.Combine(appData, @"Autodesk\ApplicationPlugins\TaiAiAddin.bundle\Contents\RCBO.dwg"));
+                }
+            }
+            catch { }
+
+            try
+            {
+                if (!string.IsNullOrEmpty(AppDomain.CurrentDomain.BaseDirectory))
+                {
+                    searchPaths.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Thư Viện\Điện\RCBO.dwg"));
+                }
+            }
+            catch { }
+
+            try
+            {
+                string asmLoc = typeof(PanelTreeDrawerService).Assembly.Location;
+                if (!string.IsNullOrEmpty(asmLoc))
+                {
+                    string asmDir = Path.GetDirectoryName(asmLoc);
+                    if (!string.IsNullOrEmpty(asmDir))
+                    {
+                        searchPaths.Add(Path.Combine(asmDir, @"Thư Viện\Điện\RCBO.dwg"));
+                        searchPaths.Add(Path.Combine(asmDir, "RCBO.dwg"));
+                    }
+                }
+            }
+            catch { }
+
+            foreach (string p in searchPaths)
+            {
+                if (!string.IsNullOrEmpty(p) && File.Exists(p))
+                {
+                    ObjectId bId = ImportBlockFromDwg(db, "RCBO", p);
+                    if (bId != ObjectId.Null && !bId.IsErased) return bId;
+                }
+            }
+            return ObjectId.Null;
         }
 
         private static ObjectId ImportBlockFromDwg(Database targetDb, string blockName, string dwgPath)
@@ -855,15 +928,48 @@ namespace TaiAiAddin.Services
 
                 if (brkCustom == null || !brkCustom.IsDeleted)
                 {
+                    bool isRcbo = (!string.IsNullOrEmpty(load.BreakerType) && (load.BreakerType.IndexOf("RCBO", StringComparison.OrdinalIgnoreCase) >= 0 || load.BreakerType.IndexOf("RCCB", StringComparison.OrdinalIgnoreCase) >= 0))
+                        || (!string.IsNullOrEmpty(load.BreakerSpec) && (load.BreakerSpec.IndexOf("RCBO", StringComparison.OrdinalIgnoreCase) >= 0 || load.BreakerSpec.IndexOf("RCCB", StringComparison.OrdinalIgnoreCase) >= 0));
+
+                    ObjectId rcboBlockId = isRcbo ? GetOrLoadRcboBlock(db) : ObjectId.Null;
+
                     AddOrthogonalWireH(btr, tr, new Point3d(busbarX, rowY, 0), new Point3d(actualSwPt.X - 6.25 * bScale, actualSwPt.Y, 0), LayerWire, 3);
-                    DrawSouthBranchSwitch(btr, tr, actualSwPt, LayerDevice, false, bScale);
+
+                    if (isRcbo && rcboBlockId != ObjectId.Null && !rcboBlockId.IsErased)
+                    {
+                        // Chèn thẳng Block RCBO nguyên khối từ thư viện, không phân rã, luôn giữ hướng ngang
+                        BlockReference blkRcbo = new BlockReference(new Point3d(actualSwPt.X - 6.25 * bScale, actualSwPt.Y, 0), rcboBlockId);
+                        double scaleVal = (1.0 / 150.0) * bScale;
+                        blkRcbo.ScaleFactors = new Scale3d(scaleVal, scaleVal, 1.0);
+                        blkRcbo.Rotation = 0.0;
+                        blkRcbo.Layer = LayerDevice;
+                        btr.AppendEntity(blkRcbo);
+                        tr.AddNewlyCreatedDBObject(blkRcbo, true);
+                    }
+                    else
+                    {
+                        DrawSouthBranchSwitch(btr, tr, actualSwPt, LayerDevice, false, bScale);
+                    }
+
                     AddOrthogonalWireH(btr, tr, new Point3d(actualSwPt.X + 6.25 * bScale, actualSwPt.Y, 0), new Point3d(tableStartX, rowY, 0), LayerWire, 3);
                 }
 
                 // CỘT 1: THIẾT BỊ BẢO VỆ (CHỈ CHỨA CHỮ, KHÔNG CÓ KÝ HIỆU HÌNH HỌC CHÈN LÊN)
-                string breakerStr = load.Phase == PhaseType.ThreePhase
-                    ? string.Format("MCB-3P-{0}A-10kA", Math.Max(16, Math.Ceiling(load.CurrentA * 1.25)))
-                    : string.Format("MCB-1P-{0}A-6kA", Math.Max(10, Math.Ceiling(load.CurrentA * 1.25)));
+                string breakerStr;
+                if (!string.IsNullOrEmpty(load.BreakerSpec))
+                {
+                    breakerStr = load.BreakerSpec;
+                }
+                else if (!string.IsNullOrEmpty(load.BreakerType))
+                {
+                    breakerStr = string.Format("{0} {1}A", load.BreakerType, Math.Max(16, Math.Ceiling(load.CurrentA * 1.25)));
+                }
+                else
+                {
+                    breakerStr = load.Phase == PhaseType.ThreePhase
+                        ? string.Format("MCB-3P-{0}A-10kA", Math.Max(16, Math.Ceiling(load.CurrentA * 1.25)))
+                        : string.Format("MCB-1P-{0}A-6kA", Math.Max(10, Math.Ceiling(load.CurrentA * 1.25)));
+                }
                 DrawMText(btr, tr, db, breakerStr, new Point3d(colProtectX + 3.0, rowY, 0), 1.9, AttachmentPoint.MiddleLeft, LayerText);
 
                 // CỘT 2: KHỞI ĐỘNG
@@ -899,9 +1005,27 @@ namespace TaiAiAddin.Services
                 }
                 else
                 {
-                    int phIdx = i % 3;
-                    if (string.Equals(load.AssignedPhase, "B", StringComparison.OrdinalIgnoreCase) || string.Equals(load.AssignedPhase, "Y", StringComparison.OrdinalIgnoreCase)) phIdx = 1;
-                    else if (string.Equals(load.AssignedPhase, "C", StringComparison.OrdinalIgnoreCase) || string.Equals(load.AssignedPhase, "B", StringComparison.OrdinalIgnoreCase)) phIdx = 2;
+                    int phIdx;
+                    if (load.PowerR > 0.0001 && load.PowerY <= 0.0001 && load.PowerB <= 0.0001)
+                    {
+                        phIdx = 0;
+                    }
+                    else if (load.PowerY > 0.0001 && load.PowerR <= 0.0001 && load.PowerB <= 0.0001)
+                    {
+                        phIdx = 1;
+                    }
+                    else if (load.PowerB > 0.0001 && load.PowerR <= 0.0001 && load.PowerY <= 0.0001)
+                    {
+                        phIdx = 2;
+                    }
+                    else
+                    {
+                        string ap = (load.AssignedPhase ?? "").Trim().ToUpper();
+                        if (ap == "R" || ap == "A" || ap == "1") phIdx = 0;
+                        else if (ap == "Y" || ap == "PHA B" || ap == "2") phIdx = 1;
+                        else if (ap == "B" || ap == "C" || ap == "PHA C" || ap == "3") phIdx = 2;
+                        else phIdx = i % 3;
+                    }
 
                     if (phIdx == 0) { sumA += pWatts; valA = string.Format("{0:0}", pWatts); }
                     else if (phIdx == 1) { sumB += pWatts; valB = string.Format("{0:0}", pWatts); }
@@ -1293,7 +1417,7 @@ namespace TaiAiAddin.Services
                     string.Format("{0:0.##}", load.PowerKW),
                     load.Phase == PhaseType.ThreePhase ? "3P" : (load.AssignedPhase ?? "1P"),
                     string.Format("{0:0.#}", load.CurrentA),
-                    load.Phase == PhaseType.ThreePhase ? string.Format("MCB 3P {0:0.#}A", Math.Max(16, Math.Ceiling(load.CurrentA * 1.25))) : string.Format("MCB 1P {0:0.#}A", Math.Max(10, Math.Ceiling(load.CurrentA * 1.25))),
+                    (!string.IsNullOrEmpty(load.BreakerSpec) ? load.BreakerSpec : (!string.IsNullOrEmpty(load.BreakerType) ? string.Format("{0} {1}A", load.BreakerType, Math.Max(16, Math.Ceiling(load.CurrentA * 1.25))) : (load.Phase == PhaseType.ThreePhase ? string.Format("MCB 3P {0:0.#}A", Math.Max(16, Math.Ceiling(load.CurrentA * 1.25))) : string.Format("MCB 1P {0:0.#}A", Math.Max(10, Math.Ceiling(load.CurrentA * 1.25)))))),
                     !string.IsNullOrEmpty(load.CableSpec) ? load.CableSpec : (load.Phase == PhaseType.ThreePhase ? "4x4+E4mm2" : "2x2.5+E2.5mm2"),
                     ""
                 };

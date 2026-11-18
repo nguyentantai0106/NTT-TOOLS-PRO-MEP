@@ -1,0 +1,362 @@
+<Window x:Class="TaiAiAddin.Views.SettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="CẤU HÌNH TOOLS &amp; SPEC DỰ ÁN - NTT TOOLS"
+        Width="430" Height="680" MinWidth="400" MinHeight="500"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" AllowsTransparency="True"
+        ShowInTaskbar="True"
+        FontFamily="Segoe UI Variable Display, Inter, Roboto, Segoe UI, sans-serif" FontSize="12"
+        Background="Transparent" Foreground="#FFFFFF">
+
+    <Window.Resources>
+        <!-- Dark Mode Color Palette OLED Black 100% -->
+        <SolidColorBrush x:Key="BgPrimary" Color="#000000"/>
+        <SolidColorBrush x:Key="BgSurface" Color="#0A0D14"/>
+        <SolidColorBrush x:Key="BgSubCard" Color="#12161F"/>
+        <SolidColorBrush x:Key="BgHover" Color="#1E2433"/>
+        <SolidColorBrush x:Key="BorderDivider" Color="#2A3246"/>
+        <SolidColorBrush x:Key="AccentCyan" Color="#00E5FF"/>
+        <SolidColorBrush x:Key="AccentAmber" Color="#FF9100"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#94A3B8"/>
+        <SolidColorBrush x:Key="StatusSuccess" Color="#00E676"/>
+        <SolidColorBrush x:Key="StatusWarning" Color="#FFD600"/>
+
+        <!-- Dải màu Neon Cyberpunk 360 độ -->
+        <LinearGradientBrush x:Key="CyberpunkNeonBorderBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#00E5FF" Offset="0.0"/>
+            <GradientStop Color="#3B82F6" Offset="0.5"/>
+            <GradientStop Color="#D946EF" Offset="1.0"/>
+        </LinearGradientBrush>
+
+        <!-- Style Nút Đóng Close -->
+        <Style x:Key="CloseBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FF5252"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Style Nút Chức Năng Cài Đặt -->
+        <Style x:Key="ConfigItemBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#12161F"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#2A3246"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource CyberpunkNeonBorderBrush}"/>
+                                <Setter TargetName="border" Property="BorderThickness" Value="1.2"/>
+                                <Setter TargetName="border" Property="Background" Value="#1E2433"/>
+                                <Setter TargetName="border" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="#00E5FF" BlurRadius="16" ShadowDepth="0" Opacity="0.85"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#0A0D14"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- Khung Viền Cửa Sổ Chính Kèm Hào Quang Mảnh -->
+    <Border Background="#0A0D14" BorderBrush="{StaticResource CyberpunkNeonBorderBrush}" BorderThickness="1.5" CornerRadius="10">
+        <Border.Effect>
+            <DropShadowEffect Color="#00E5FF" BlurRadius="25" ShadowDepth="0" Opacity="0.5"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- 0. Title Bar (Kéo Thả) -->
+                <RowDefinition Height="46"/>
+                <!-- 1. Nội Dung Cuộn -->
+                <RowDefinition Height="*"/>
+                <!-- 2. Footer -->
+                <RowDefinition Height="38"/>
+            </Grid.RowDefinitions>
+
+            <!-- 0. TITLE BAR -->
+            <Border Grid.Row="0" Background="#05070B" BorderBrush="#1E2433" BorderThickness="0,0,0,1" 
+                    CornerRadius="10,10,0,0" MouseLeftButtonDown="TitleBar_MouseDown" Cursor="SizeAll">
+                <DockPanel HorizontalAlignment="Stretch" Margin="14,0,8,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="⚙️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="CẤU HÌNH TOOLS &amp; SPEC DỰ ÁN" FontWeight="Bold" FontSize="12.5" Foreground="#00E5FF" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button Style="{StaticResource CloseBtnStyle}" Content="✕" Click="BtnClose_Click" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </DockPanel>
+            </Border>
+
+            <!-- 1. NỘI DUNG CUỘN (SCROLLVIEWER) -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="14,12">
+                <StackPanel HorizontalAlignment="Stretch">
+
+                    <!-- KHỐI 1: TÙY CHỈNH CHUNG (GIAO DIỆN & LAYOUT) -->
+                    <Border Background="#12161F" BorderBrush="#2A3246" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,12">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="🎨 CÀI ĐẶT HỆ THỐNG" FontWeight="Bold" FontSize="11" Foreground="#00E5FF"/>
+                                <TextBlock Text="Chuẩn hóa làm việc" FontSize="9.5" Foreground="#94A3B8" HorizontalAlignment="Right"/>
+                            </DockPanel>
+
+                            <Grid Margin="0,0,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Nút Giao Diện -->
+                                <Button Grid.Column="0" Style="{StaticResource ConfigItemBtnStyle}" Click="BtnConfigUi_Click" ToolTip="Tùy chỉnh giao diện hiển thị, bảng màu và theme Dark Mode">
+                                    <DockPanel HorizontalAlignment="Stretch">
+                                        <TextBlock Text="🎨" Margin="0,0,6,0" VerticalAlignment="Center" FontSize="14"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Giao Diện" FontWeight="Bold" FontSize="11"/>
+                                            <TextBlock Text="Theme, Màu sắc" FontSize="8.5" Foreground="#94A3B8"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Button>
+
+                                <!-- Nút Khởi Tạo Layout -->
+                                <Button Grid.Column="2" Style="{StaticResource ConfigItemBtnStyle}" Click="BtnConfigLayout_Click" ToolTip="Khởi tạo khung tên bản vẽ, tỷ lệ và Layout AutoCAD">
+                                    <DockPanel HorizontalAlignment="Stretch">
+                                        <TextBlock Text="📐" Margin="0,0,6,0" VerticalAlignment="Center" FontSize="14"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Layout CAD" FontWeight="Bold" FontSize="11"/>
+                                            <TextBlock Text="Khung tên, Tỷ lệ" FontSize="8.5" Foreground="#94A3B8"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- KHỐI 2: SPEC DỰ ÁN (10 CHUYÊN MỤC KỸ THUẬT) -->
+                    <Border Background="#12161F" BorderBrush="#2A3246" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <TextBlock Text="📋 SPEC TOÀN DỰ ÁN (10 CHUYÊN MỤC)" FontWeight="Bold" FontSize="11" Foreground="#FF9100"/>
+                                <Border Background="#FF9100" CornerRadius="3" Padding="4,1" HorizontalAlignment="Right">
+                                    <TextBlock Text="TIÊU CHUẨN KỸ THUẬT" FontSize="8" FontWeight="Bold" Foreground="#12161F"/>
+                                </Border>
+                            </DockPanel>
+
+                            <!-- 1. Spec Điện -->
+                            <Button Style="{StaticResource ConfigItemBtnStyle}" Click="BtnSpecElectrical_Click"
+                                    ToolTip="Kích thước giá treo, cao độ công tắc, ổ cắm, tủ treo tường, đèn...">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="⚡" Margin="0,0,8,0" Foreground="#FFD600" VerticalAlignment="Center" FontSize="14"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="1. Spec Điện (Giá treo &amp; Cao độ thiết bị)" FontWeight="SemiBold" FontSize="11"/>
+                                        <TextBlock Text="Công tắc, ổ cắm, tủ treo tường, đèn..." FontSize="9" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <!-- 2. Spec ĐHKK -->
+                            <Button Style="{StaticResource ConfigItemBtnStyle}" Click="BtnSpecHvac_Click"
+                                    ToolTip="Tiêu chuẩn ống gió, giá treo cùm, cao độ FCU, miệng gió...">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="❄️" Margin="0,0,8,0" Foreground="#00E5FF" VerticalAlignment="Center" FontSize="14"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="2. Spec ĐHKK &amp; Thông Gió (HVAC)" FontWeight="SemiBold" FontSize="11"/>
+                                        <TextBlock Text="Quy cách ống gió, cùm treo, cao độ FCU..." FontSize="9" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <!-- 3. Spec Cấp Thoát Nước -->
+                            <Button Style="{StaticResource ConfigItemBtnStyle}" Click="BtnSpecPlumbing_Click"
+                                    ToolTip="Độ dốc đường ống, cùm treo, cao độ thiết bị vệ sinh...">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="💧" Margin="0,0,8,0" Foreground="#29B6F6" VerticalAlignment="Center" FontSize="14"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="3. Spec Cấp Thoát Nước (Plumbing)" FontWeight="SemiBold" FontSize="11"/>
+                                        <TextBlock Text="Độ dốc thoát, cùm treo và cao độ thiết bị vệ sinh..." FontSize="9" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <!-- 4. Spec Vỏ Tủ Điện -->
+                            <Button Style="{StaticResource ConfigItemBtnStyle}" Click="BtnSpecEnclosure_Click"
+                                    ToolTip="Kích thước vỏ tủ, độ dày tôn, thanh cái đồng, khoảng cách thiết bị...">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="📦" Margin="0,0,8,0" Foreground="#AB47BC" VerticalAlignment="Center" FontSize="14"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="4. Spec Thiết Kế Vỏ Tủ Điện" FontWeight="SemiBold" FontSize="11"/>
+                                        <TextBlock Text="Kích thước vỏ, độ dày tôn, thanh cái, khoảng cách..." FontSize="9" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <!-- 5. Spec PCCC -->
+                            <Button Style="{StaticResource ConfigItemBtnStyle}" Click="BtnSpecFire_Click"
+                                    ToolTip="Cao độ đầu phun Sprinkler, van báo động, hộp chữa cháy vách tường...">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="🔥" Margin="0,0,8,0" Foreground="#FF5252" VerticalAlignment="Center" FontSize="14"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="5. Spec Phòng Cháy Chữa Cháy (PCCC)" FontWeight="SemiBold" FontSize="11"/>
+                                        <TextBlock Text="Cao độ Sprinkler, van báo động, hộp chữa cháy..." FontSize="9" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <!-- 6. Spec Điện Nhẹ ELV -->
+                            <Button Style="{StaticResource ConfigItemBtnStyle}" Click="BtnSpecElv_Click"
+                                    ToolTip="Camera CCTV, mạng Data/Tel, âm thanh PA, SmartHome &amp; BMS...">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="📡" Margin="0,0,8,0" Foreground="#26C6DA" VerticalAlignment="Center" FontSize="14"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="6. Spec Điện Nhẹ &amp; BMS (ELV)" FontWeight="SemiBold" FontSize="11"/>
+                                        <TextBlock Text="Camera CCTV, Data/Tel, âm thanh PA, BMS..." FontSize="9" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <!-- 7. Spec Chống Sét & Tiếp Địa -->
+                            <Button Style="{StaticResource ConfigItemBtnStyle}" Click="BtnSpecEarthing_Click"
+                                    ToolTip="Kim thu sét ESE, cọc đồng D16, băng đồng 25x3, R &lt;= 10/4/1 Ohm...">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="⚡" Margin="0,0,8,0" Foreground="#FFA726" VerticalAlignment="Center" FontSize="14"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="7. Spec Chống Sét &amp; Tiếp Địa" FontWeight="SemiBold" FontSize="11"/>
+                                        <TextBlock Text="Kim thu sét ESE, cọc D16, băng đồng, R &lt;= 10Ω..." FontSize="9" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <!-- 8. Spec Trạm Biến Áp & Máy Phát -->
+                            <Button Style="{StaticResource ConfigItemBtnStyle}" Click="BtnSpecSubstation_Click"
+                                    ToolTip="Máy biến áp Kiosk/Dry, phòng máy phát tiêu âm, rãnh cáp...">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="🏭" Margin="0,0,8,0" Foreground="#EC407A" VerticalAlignment="Center" FontSize="14"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="8. Spec Trạm Biến Áp &amp; Máy Phát" FontWeight="SemiBold" FontSize="11"/>
+                                        <TextBlock Text="MBA Kiosk/Dry, phòng máy phát tiêu âm, rãnh cáp..." FontSize="9" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <!-- 9. Spec Chiếu Sáng & Điều Khiển -->
+                            <Button Style="{StaticResource ConfigItemBtnStyle}" Click="BtnSpecLighting_Click"
+                                    ToolTip="Tiêu chuẩn độ rọi Lux TCVN 7114, cảm biến PIR, DALI...">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="💡" Margin="0,0,8,0" Foreground="#FFEE58" VerticalAlignment="Center" FontSize="14"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="9. Spec Chiếu Sáng &amp; Smart Control" FontWeight="SemiBold" FontSize="11"/>
+                                        <TextBlock Text="Độ rọi Lux TCVN 7114, cảm biến PIR, DALI..." FontSize="9" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <!-- 10. Spec Năng Lượng Mặt Trời -->
+                            <Button Style="{StaticResource ConfigItemBtnStyle}" Click="BtnSpecSolar_Click"
+                                    ToolTip="Tấm pin PV 550-670Wp, Inverter hòa lưới, Zero Export...">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="☀️" Margin="0,0,8,0" Foreground="#26A69A" VerticalAlignment="Center" FontSize="14"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="10. Spec Điện Mặt Trời (Solar PV)" FontWeight="SemiBold" FontSize="11"/>
+                                        <TextBlock Text="Tấm pin PV 550-670Wp, Inverter, Zero Export..." FontSize="9" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- 2. FOOTER STATUS BAR -->
+            <Border Grid.Row="2" Background="#05070B" BorderBrush="#1E2433" BorderThickness="0,1,0,0" CornerRadius="0,0,10,10" Padding="14,0">
+                <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                    <TextBlock Text="NTT TOOLS PRO MEP AI" FontSize="9.5" FontWeight="Bold" Foreground="#00E5FF" VerticalAlignment="Center"/>
+                    <TextBlock Text="Phiên bản 2026 • Kỹ sư Nguyễn Tấn Tài" FontSize="9" Foreground="#64748B" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </DockPanel>
+            </Border>
+
+        </Grid>
+    </Border>
+</Window>

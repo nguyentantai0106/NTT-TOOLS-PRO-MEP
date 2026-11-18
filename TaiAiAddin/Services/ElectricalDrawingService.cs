@@ -952,6 +952,10 @@ namespace TaiAiAddin.Services
 
                     tr.AddNewlyCreatedDBObject(newG, true);
 
+                    try { newG.XData = rb; } catch { }
+
+                    PanelStorageService.SavePanelToNod(db, panel);
+
                 }
 
                 catch { }
@@ -1955,9 +1959,9 @@ namespace TaiAiAddin.Services
 
             {
 
-                string asmPath = Assembly.GetExecutingAssembly().Location;
-
-                string asmDir = Path.GetDirectoryName(asmPath);
+                string asmPath = "";
+                try { asmPath = Assembly.GetExecutingAssembly().Location; } catch { }
+                string asmDir = !string.IsNullOrEmpty(asmPath) ? Path.GetDirectoryName(asmPath) : "";
 
                 if (!string.IsNullOrEmpty(asmDir))
 
@@ -2807,82 +2811,565 @@ namespace TaiAiAddin.Services
 
                 }
 
+            }            // 3. Kiểm tra nếu đối tượng là Text/MText chứa tên tủ điện
+            DBText dt = ent as DBText;
+            if (dt != null && !string.IsNullOrEmpty(dt.TextString))
+            {
+                string match = ExtractPanelNameFromText(dt.TextString);
+                if (!string.IsNullOrEmpty(match)) return match;
+            }
+            MText mt = ent as MText;
+            if (mt != null && !string.IsNullOrEmpty(mt.Contents))
+            {
+                string match = ExtractPanelNameFromText(mt.Contents);
+                if (!string.IsNullOrEmpty(match)) return match;
             }
 
-            return null;
+            // 4. Nếu click vào thực thể trong phạm vi sơ đồ, quét bán kính tìm Text tên tủ gần nhất
+            try
+            {
+                Extents3d ext = ent.GeometricExtents;
+                Point3d clickCenter = new Point3d((ext.MinPoint.X + ext.MaxPoint.X) / 2.0, (ext.MinPoint.Y + ext.MaxPoint.Y) / 2.0, 0);
+                string nearbyPanel = FindNearbyPanelName(clickCenter, tr, db);
+                if (!string.IsNullOrEmpty(nearbyPanel)) return nearbyPanel;
+            }
+            catch { }
 
+            // 5. Fallback tên bản vẽ hiện hành nếu bản vẽ mang tên tủ điện (VD: DB-XLDC.dwg)
+            try
+            {
+                if (db != null && !string.IsNullOrEmpty(db.Filename))
+                {
+                    string fn = System.IO.Path.GetFileNameWithoutExtension(db.Filename);
+                    if (fn.StartsWith("DB", StringComparison.OrdinalIgnoreCase) || fn.StartsWith("MDB", StringComparison.OrdinalIgnoreCase) || fn.StartsWith("MSB", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return fn.ToUpperInvariant();
+                    }
+                }
+            }
+            catch { }
+
+            return null;
         }
 
-        /// <summary>
+        private static string ExtractPanelNameFromText(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return null;
+            string t = text.Trim();
+            var mPrefix = System.Text.RegularExpressions.Regex.Match(t, @"(?:TÊN\s+TỦ(?:[^\w:]*)?:?|TỦ\s+SỐ:?|TỦ:)\s*([A-Za-z0-9\-_]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (mPrefix.Success && mPrefix.Groups[1].Value.Length > 2)
+            {
+                return mPrefix.Groups[1].Value.Trim().ToUpperInvariant();
+            }
+            var mSld = System.Text.RegularExpressions.Regex.Match(t, @"(?:SƠ\s+ĐỒ\s+NGUYÊN\s+LÝ\s+TỦ\s+ĐIỆN)\s+([A-Za-z0-9\-_]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (mSld.Success && mSld.Groups[1].Value.Length > 2)
+            {
+                return mSld.Groups[1].Value.Trim().ToUpperInvariant();
+            }
+            var mDirect = System.Text.RegularExpressions.Regex.Match(t, @"^(?:DB|MDB|MSB|LP|PP|MCC|ATS)[-_][A-Za-z0-9-_]+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (mDirect.Success)
+            {
+                return mDirect.Value.Trim().ToUpperInvariant();
+            }
+            return null;
+        }
 
+        private static string FindNearbyPanelName(Point3d center, Transaction tr, Database db)
+        {
+            try
+            {
+                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                BlockTableRecord ms = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForRead);
+                double maxDist = 3000.0;
+                string foundName = null;
+                double closestDist = double.MaxValue;
+
+                foreach (ObjectId id in ms)
+                {
+                    if (!id.IsValid || id.IsErased) continue;
+                    DBText dt = tr.GetObject(id, OpenMode.ForRead) as DBText;
+                    if (dt != null && !string.IsNullOrEmpty(dt.TextString))
+                    {
+                        string pName = ExtractPanelNameFromText(dt.TextString);
+                        if (!string.IsNullOrEmpty(pName))
+                        {
+                            double d = dt.Position.DistanceTo(center);
+                            if (d < maxDist && d < closestDist)
+                            {
+                                closestDist = d;
+                                foundName = pName;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        MText mt = tr.GetObject(id, OpenMode.ForRead) as MText;
+                        if (mt != null && !string.IsNullOrEmpty(mt.Contents))
+                        {
+                            string pName = ExtractPanelNameFromText(mt.Contents);
+                            if (!string.IsNullOrEmpty(pName))
+                            {
+                                double d = mt.Location.DistanceTo(center);
+                                if (d < maxDist && d < closestDist)
+                                {
+                                    closestDist = d;
+                                    foundName = pName;
+                                }
+                            }
+                        }
+                    }
+                }
+                return foundName;
+            }
+            catch { return null; }
+        }
+
+        private static ElectricalPanel ParsePanelFromModelSpace(string panelName, Transaction tr, Database db)
+        {
+            try
+            {
+                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                BlockTableRecord ms = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForRead);
+                List<CadTextItem> textItems = new List<CadTextItem>();
+
+                foreach (ObjectId id in ms)
+                {
+                    if (!id.IsValid || id.IsErased) continue;
+                    DBText dt = tr.GetObject(id, OpenMode.ForRead) as DBText;
+                    if (dt != null && !string.IsNullOrEmpty(dt.TextString))
+                    {
+                        textItems.Add(new CadTextItem { Text = dt.TextString.Trim(), X = dt.Position.X, Y = dt.Position.Y });
+                    }
+                    else
+                    {
+                        MText mt = tr.GetObject(id, OpenMode.ForRead) as MText;
+                        if (mt != null && !string.IsNullOrEmpty(mt.Contents))
+                        {
+                            textItems.Add(new CadTextItem { Text = mt.Contents.Trim(), X = mt.Location.X, Y = mt.Location.Y });
+                        }
+                    }
+                }
+
+                if (textItems.Count == 0) return null;
+
+                double targetMinY = double.MinValue;
+                double targetMaxY = double.MaxValue;
+                foreach (var t in textItems)
+                {
+                    if (!string.IsNullOrEmpty(panelName) && t.Text.IndexOf(panelName, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        targetMaxY = t.Y + 200.0;
+                        targetMinY = t.Y - 2500.0;
+                        break;
+                    }
+                }
+
+                var filteredTexts = textItems
+                    .Where(t => t.Y >= targetMinY && t.Y <= targetMaxY)
+                    .ToList();
+                if (filteredTexts.Count == 0) filteredTexts = textItems;
+
+                var rows = filteredTexts
+                    .GroupBy(t => Math.Round(t.Y / 4.0) * 4.0)
+                    .OrderByDescending(g => g.Key)
+                    .ToList();
+
+                List<ElectricalLoad> loads = new List<ElectricalLoad>();
+                int sttCounter = 1;
+
+                foreach (var row in rows)
+                {
+                    var items = row.OrderBy(t => t.X).ToList();
+                    string breaker = "";
+                    string cable = "";
+                    string loadName = "";
+                    string tag = "";
+                    List<double> powers = new List<double>();
+                    bool is3P = false;
+
+                    foreach (var it in items)
+                    {
+                        string s = it.Text.Trim();
+                        double numVal;
+                        if (s.StartsWith("MCB") || s.StartsWith("MCCB") || s.StartsWith("RCCB") || s.StartsWith("RCBO"))
+                        {
+                            breaker = s;
+                            if (s.Contains("3P") || s.Contains("4P")) is3P = true;
+                        }
+                        else if (s.Contains("Cu/") || s.Contains("PVC") || s.Contains("XLPE") || s.Contains("mm2"))
+                        {
+                            cable = s;
+                        }
+                        else if (System.Text.RegularExpressions.Regex.IsMatch(s, @"^C\d{1,3}$") || s.ToUpperInvariant().Contains("SPARE") || s.ToUpperInvariant().StartsWith("SP"))
+                        {
+                            tag = s;
+                        }
+                        else if (double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out numVal))
+                        {
+                            if (numVal > 10.0)
+                            {
+                                powers.Add(numVal);
+                            }
+                            else if (numVal > 0.05 && numVal <= 10.0)
+                            {
+                                powers.Add(numVal * 1000.0);
+                            }
+                        }
+                        else if (s.Length > 2 && !PanelStorageService.IsInvalidOrHeaderLoad(s)
+                                 && !s.StartsWith("TỦ") && !s.StartsWith("VỊ TRÍ") && !s.StartsWith("KÍCH THƯỚC")
+                                 && !s.Equals("DOL", StringComparison.OrdinalIgnoreCase) && !s.Equals("-")
+                                 && !s.Contains("THIẾT BỊ") && !s.Contains("CÁP / DÂY") && !s.Contains("PHẠM VI")
+                                 && !s.Contains("KHỞI ĐỘNG") && !s.Contains("GHI CHÚ") && !s.Contains("ĐỒNG HỒ")
+                                 && !s.Contains("ĐÈN BÁO") && !s.Contains("BUSBAR") && !s.Contains("HỆ SỐ")
+                                 && !s.Contains("ĐẦU VÀO") && !s.Contains("CÔNG SUẤT") && !s.Contains("TỔNG"))
+                        {
+                            if (string.IsNullOrEmpty(loadName))
+                                loadName = s;
+                        }
+                    }
+
+                    bool hasCircuitTag = !string.IsNullOrEmpty(tag) && (System.Text.RegularExpressions.Regex.IsMatch(tag, @"^C\d{1,3}$") || tag.ToUpperInvariant().Contains("SPARE") || tag.ToUpperInvariant().StartsWith("SP"));
+                    bool hasBreaker = !string.IsNullOrEmpty(breaker) && !breaker.Contains("100A") && !breaker.Contains("25kA 100A");
+                    if (!hasBreaker && !string.IsNullOrEmpty(breaker)) hasBreaker = true;
+
+                    if ((hasCircuitTag || hasBreaker) && !string.IsNullOrEmpty(loadName) && !PanelStorageService.IsInvalidOrHeaderLoad(loadName))
+                    {
+                        double finalPowerKW = 1.5;
+                        double pR = 0, pY = 0, pB = 0;
+                        if (powers.Count >= 3)
+                        {
+                            pR = powers[0] / 1000.0;
+                            pY = powers[1] / 1000.0;
+                            pB = powers[2] / 1000.0;
+                            finalPowerKW = pR + pY + pB;
+                            is3P = true;
+                        }
+                        else if (powers.Count == 1)
+                        {
+                            finalPowerKW = powers[0] / 1000.0;
+                        }
+                        else if (powers.Count > 0)
+                        {
+                            double maxP = powers.Max();
+                            finalPowerKW = maxP / 1000.0;
+                        }
+
+                        ElectricalLoad load = new ElectricalLoad
+                        {
+                            Stt = sttCounter++,
+                            LoadName = loadName,
+                            CircuitNumber = tag,
+                            BreakerSpec = breaker,
+                            CableSpec = cable,
+                            PowerKW = finalPowerKW > 0.01 ? Math.Round(finalPowerKW, 3) : 1.5,
+                            Phase = is3P ? PhaseType.ThreePhase : PhaseType.SinglePhase
+                        };
+                        if (is3P && pR > 0.001)
+                        {
+                            load.PowerR = pR;
+                            load.PowerY = pY;
+                            load.PowerB = pB;
+                        }
+                        loads.Add(load);
+                    }
+                }
+
+                if (loads.Count > 0)
+                {
+                    var orderedLoads = loads.OrderBy(ld => {
+                        int num = 0;
+                        var m = System.Text.RegularExpressions.Regex.Match(ld.CircuitNumber, @"\d+");
+                        if (m.Success) int.TryParse(m.Value, out num);
+                        return num > 0 ? num : ld.Stt;
+                    }).ToList();
+
+                    for (int k = 0; k < orderedLoads.Count; k++)
+                    {
+                        orderedLoads[k].Stt = k + 1;
+                    }
+
+                    string actualPanelName = !string.IsNullOrEmpty(panelName) ? panelName : "DB-XLDC";
+                    ElectricalPanel p = new ElectricalPanel
+                    {
+                        PanelName = actualPanelName,
+                        VoltageV = 380,
+                        SimultaneousFactor = 0.85,
+                        PowerFactor = 0.85,
+                        Loads = orderedLoads
+                    };
+                    PanelStorageService.SanitizePanel(p);
+                    ElectricalCalculator calc = new ElectricalCalculator();
+                    calc.CalculatePanel(p);
+                    return p;
+                }
+            }
+            catch { }
+            return null;
+        }
+
+
+        /// <summary>
         /// Thử khôi phục toàn bộ đối tượng ElectricalPanel từ XData lưu trên bản vẽ CAD
 
         /// </summary>
 
-        public static ElectricalPanel RestorePanelFromDrawing(string panelName, Transaction tr, Database db)
-
+        private class CadTextItem
         {
+            public string Text { get; set; }
+            public double X { get; set; }
+            public double Y { get; set; }
+        }
 
-            if (string.IsNullOrEmpty(panelName)) return null;
-
-            DBDictionary groupDict = (DBDictionary)tr.GetObject(db.GroupDictionaryId, OpenMode.ForRead);
-
-            string cleanName = "TAIAI_PANEL_" + panelName.Replace("-", "_").Replace(" ", "_");
-
-            if (groupDict.Contains(cleanName))
-
+        private static ElectricalPanel ParsePanelFromGroupEntities(string panelName, Group grp, Transaction tr)
+        {
+            if (grp == null) return null;
+            try
             {
+                ObjectId[] ids = grp.GetAllEntityIds();
+                List<CadTextItem> textItems = new List<CadTextItem>();
 
-                ObjectId gid = groupDict.GetAt(cleanName);
-
-                Group grp = tr.GetObject(gid, OpenMode.ForRead) as Group;
-
-                if (grp != null)
-
+                foreach (ObjectId id in ids)
                 {
-
-                    ObjectId[] ids = grp.GetAllEntityIds();
-
-                    foreach (ObjectId id in ids)
-
+                    if (!id.IsValid || id.IsErased) continue;
+                    DBObject obj = tr.GetObject(id, OpenMode.ForRead);
+                    MText mt = obj as MText;
+                    if (mt != null)
                     {
-
-                        if (id.IsValid && !id.IsNull && !id.IsErased)
-
-                        {
-
-                            DBObject obj = tr.GetObject(id, OpenMode.ForRead);
-
-                            ResultBuffer rb = obj.GetXDataForApplication(PanelStorageService.RegAppName);
-
-                            if (rb != null)
-
-                            {
-
-                                Point3d pt;
-
-                                ElectricalPanel panel = PanelStorageService.DeserializePanelFromXData(rb, out pt);
-
-                                if (panel != null && panel.Loads.Count > 0)
-
-                                {
-
-                                    return panel;
-
-                                }
-
-                            }
-
-                        }
-
+                        string txt = mt.Contents != null ? mt.Contents.Trim() : null;
+                        if (!string.IsNullOrEmpty(txt))
+                            textItems.Add(new CadTextItem { Text = txt, X = mt.Location.X, Y = mt.Location.Y });
                     }
-
+                    else
+                    {
+                        DBText dt = obj as DBText;
+                        if (dt != null)
+                        {
+                            string txt = dt.TextString != null ? dt.TextString.Trim() : null;
+                            if (!string.IsNullOrEmpty(txt))
+                                textItems.Add(new CadTextItem { Text = txt, X = dt.Position.X, Y = dt.Position.Y });
+                        }
+                    }
                 }
 
+                if (textItems.Count == 0) return null;
+
+                // Nhóm theo tọa độ Y (các hàng phụ tải) với dung sai 4.0
+                var rows = textItems
+                    .GroupBy(t => Math.Round(t.Y / 4.0) * 4.0)
+                    .OrderByDescending(g => g.Key)
+                    .ToList();
+
+                List<ElectricalLoad> loads = new List<ElectricalLoad>();
+                int sttCounter = 1;
+
+                foreach (var row in rows)
+                {
+                    var items = row.OrderBy(t => t.X).ToList();
+                    string breaker = "";
+                    string cable = "";
+                    string loadName = "";
+                    string tag = "";
+                    double power = 0.0;
+                    bool is3P = false;
+
+                    foreach (var it in items)
+                    {
+                        string s = it.Text.Trim();
+                        double numVal;
+                        if (s.StartsWith("MCB") || s.StartsWith("MCCB") || s.StartsWith("RCCB") || s.StartsWith("RCBO"))
+                        {
+                            breaker = s;
+                            if (s.Contains("3P")) is3P = true;
+                        }
+                        else if (s.Contains("Cu/") || s.Contains("PVC") || s.Contains("XLPE") || s.Contains("mm2"))
+                        {
+                            cable = s;
+                        }
+                        else if (System.Text.RegularExpressions.Regex.IsMatch(s, @"^C\d{1,3}$") || s.Equals("SPARE", StringComparison.OrdinalIgnoreCase))
+                        {
+                            tag = s;
+                        }
+                        else if (double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out numVal))
+                        {
+                            if (numVal > 10.0)
+                            {
+                                double kw = numVal / 1000.0;
+                                if (kw > power) power = kw;
+                            }
+                            else if (numVal > 0.05 && numVal <= 10.0)
+                            {
+                                if (numVal > power) power = numVal;
+                            }
+                        }
+                        else if (s.Length > 2 && !PanelStorageService.IsInvalidOrHeaderLoad(s)
+                                 && !s.StartsWith("TỦ") && !s.StartsWith("VỊ TRÍ") && !s.StartsWith("KÍCH THƯỚC")
+                                 && !s.Equals("DOL", StringComparison.OrdinalIgnoreCase) && !s.Equals("-")
+                                 && !s.Contains("THIẾT BỊ") && !s.Contains("CÁP / DÂY") && !s.Contains("PHẠM VI"))
+                        {
+                            if (string.IsNullOrEmpty(loadName))
+                                loadName = s;
+                        }
+                    }
+
+                    bool hasCircuitTag = !string.IsNullOrEmpty(tag) && (System.Text.RegularExpressions.Regex.IsMatch(tag, @"^C\d{1,3}$") || tag.ToUpperInvariant().Contains("SPARE"));
+                    bool hasBreaker = !string.IsNullOrEmpty(breaker);
+                    if ((hasCircuitTag || hasBreaker) && !string.IsNullOrEmpty(loadName) && !PanelStorageService.IsInvalidOrHeaderLoad(loadName))
+                    {
+                        ElectricalLoad load = new ElectricalLoad
+                        {
+                            Stt = sttCounter++,
+                            LoadName = loadName,
+                            CircuitNumber = tag,
+                            BreakerSpec = breaker,
+                            CableSpec = cable,
+                            PowerKW = power > 0 ? power : 1.5,
+                            Phase = is3P ? PhaseType.ThreePhase : PhaseType.SinglePhase
+                        };
+                        loads.Add(load);
+                    }
+                }
+
+                if (loads.Count > 0)
+                {
+                    ElectricalPanel p = new ElectricalPanel
+                    {
+                        PanelName = panelName,
+                        VoltageV = 380,
+                        SimultaneousFactor = 0.85,
+                        PowerFactor = 0.85,
+                        Loads = loads
+                    };
+                    PanelStorageService.SanitizePanel(p);
+                    ElectricalCalculator calc = new ElectricalCalculator();
+                    calc.CalculatePanel(p);
+                    return p;
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        public static ElectricalPanel RestorePanelFromDrawing(string panelName, Transaction tr, Database db)
+        {
+            if (string.IsNullOrEmpty(panelName)) return null;
+
+            // 1. Kiểm tra trong NamedObjectDictionary (NOD) của bản vẽ DWG
+            try
+            {
+                DBDictionary nod = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
+                if (nod.Contains(PanelStorageService.NodPanelsDictKey))
+                {
+                    DBDictionary panelDict = (DBDictionary)tr.GetObject(nod.GetAt(PanelStorageService.NodPanelsDictKey), OpenMode.ForRead);
+                    string key = panelName.Trim().ToUpperInvariant();
+                    string normKey = key.Replace("-", "").Replace("_", "").Replace(" ", "");
+                    
+                    ObjectId targetId = ObjectId.Null;
+                    if (panelDict.Contains(key))
+                    {
+                        targetId = panelDict.GetAt(key);
+                    }
+                    else
+                    {
+                        foreach (DBDictionaryEntry entry in panelDict)
+                        {
+                            string eKey = entry.Key.Trim().ToUpperInvariant().Replace("-", "").Replace("_", "").Replace(" ", "");
+                            if (eKey == normKey)
+                            {
+                                targetId = entry.Value;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (targetId.IsValid && !targetId.IsErased)
+                    {
+                        Xrecord xrec = tr.GetObject(targetId, OpenMode.ForRead) as Xrecord;
+                        if (xrec != null && xrec.Data != null)
+                        {
+                            Point3d dummy;
+                            ElectricalPanel p = PanelStorageService.DeserializePanelFromXData(xrec.Data, out dummy);
+                            if (p != null && p.Loads != null && p.Loads.Count > 0)
+                            {
+                                PanelStorageService.SanitizePanel(p);
+                                return p;
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            // 2. Kiểm tra trong Group TAIAI_PANEL_*
+            DBDictionary groupDict = (DBDictionary)tr.GetObject(db.GroupDictionaryId, OpenMode.ForRead);
+            string cleanName = "TAIAI_PANEL_" + panelName.Replace("-", "_").Replace(" ", "_");
+            if (groupDict.Contains(cleanName))
+            {
+                ObjectId gid = groupDict.GetAt(cleanName);
+                Group grp = tr.GetObject(gid, OpenMode.ForRead) as Group;
+                if (grp != null)
+                {
+                    // 2a. Kiểm tra XData trên chính đối tượng Group
+                    try
+                    {
+                        ResultBuffer grpRb = grp.GetXDataForApplication(PanelStorageService.RegAppName);
+                        if (grpRb != null)
+                        {
+                            Point3d pt;
+                            ElectricalPanel panel = PanelStorageService.DeserializePanelFromXData(grpRb, out pt);
+                            if (panel != null && panel.Loads != null && panel.Loads.Count > 0)
+                            {
+                                PanelStorageService.SavePanelToNod(db, panel);
+                                return panel;
+                            }
+                        }
+                    }
+                    catch { }
+
+                    // 2b. Kiểm tra XData trên các thực thể trong Group
+                    ObjectId[] ids = grp.GetAllEntityIds();
+                    foreach (ObjectId id in ids)
+                    {
+                        if (id.IsValid && !id.IsNull && !id.IsErased)
+                        {
+                            DBObject obj = tr.GetObject(id, OpenMode.ForRead);
+                            ResultBuffer rb = obj.GetXDataForApplication(PanelStorageService.RegAppName);
+                            if (rb != null)
+                            {
+                                Point3d pt;
+                                ElectricalPanel panel = PanelStorageService.DeserializePanelFromXData(rb, out pt);
+                                if (panel != null && panel.Loads != null && panel.Loads.Count > 0)
+                                {
+                                    PanelStorageService.SavePanelToNod(db, panel);
+                                    return panel;
+                                }
+                            }
+                        }
+                    }
+
+                    // 2c. Fallback tái tạo từ Text/MText trong Group
+                    ElectricalPanel parsed = ParsePanelFromGroupEntities(panelName, grp, tr);
+                    if (parsed != null && parsed.Loads != null && parsed.Loads.Count > 0)
+                    {
+                        PanelStorageService.SanitizePanel(parsed);
+                        return parsed;
+                    }
+                }
             }
 
-            return null;
+            // 3. Fallback: Quét trực tiếp ModelSpace của bản vẽ DWG để tái tạo Panel từ sơ đồ
+            try
+            {
+                ElectricalPanel parsedFromMs = ParsePanelFromModelSpace(panelName, tr, db);
+                if (parsedFromMs != null && parsedFromMs.Loads != null && parsedFromMs.Loads.Count > 0)
+                {
+                    PanelStorageService.SanitizePanel(parsedFromMs);
+                    PanelStorageService.SavePanelToNod(db, parsedFromMs);
+                    return parsedFromMs;
+                }
+            }
+            catch { }
 
+            return null;
         }
 
         #region New Technical Features: ATS, Capacitor Bank, Front View, Title Block, Riser

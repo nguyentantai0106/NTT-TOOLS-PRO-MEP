@@ -1,5 +1,6 @@
-﻿using System.Reflection;
+﻿﻿﻿﻿using System.Reflection;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Effects;
 using System;
 
 using System.Collections.Generic;
@@ -67,8 +68,8 @@ namespace TaiAiAddin.Views
 
 
     public partial class TaiAiPaletteControl : UserControl
-
     {
+        public static TaiAiPaletteControl Instance { get; private set; }
 
         private readonly LengthCalculatorService _calculatorService;
 
@@ -90,10 +91,28 @@ namespace TaiAiAddin.Views
 
 
 
-        public TaiAiPaletteControl()
-
+        static TaiAiPaletteControl()
         {
+            AppDomain.CurrentDomain.AssemblyResolve += (s, e) =>
+            {
+                try
+                {
+                    if (e == null || string.IsNullOrEmpty(e.Name)) return null;
+                    if (e.Name.IndexOf(".resources", StringComparison.OrdinalIgnoreCase) >= 0) return null;
+                    System.Reflection.AssemblyName an = new System.Reflection.AssemblyName(e.Name);
+                    if (string.Equals(an.Name, "TaiAiAddin", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return typeof(TaiAiPaletteControl).Assembly;
+                    }
+                }
+                catch { }
+                return null;
+            };
+        }
 
+        public TaiAiPaletteControl()
+        {
+            Instance = this;
             InitializeComponent();
 
             _calculatorService = new LengthCalculatorService();
@@ -144,25 +163,21 @@ namespace TaiAiAddin.Views
 
                 pnlMepFire,
 
+                pnlMepXlmb,
+
                 pnlModuleElectrical
 
             };
 
 
 
-            // 1. Nạp theme đã lưu trước đó của người dùng (Mặc định Theme 7: Tết Giáp Thìn)
+            // 1. Nạp theme đã lưu trước đó của người dùng (Mặc định Theme 9: Gemini Dark Glow)
             int savedTheme = LoadThemeSetting();
-            if (savedTheme < 1 || (_themes != null && savedTheme > _themes.Length)) savedTheme = 7;
+            if (savedTheme < 1 || (_themes != null && savedTheme > _themes.Length)) savedTheme = 9;
             ApplyTheme(savedTheme, true);
 
             // 2. Nạp cấu hình thông số và thao tác từ lần sử dụng trước (User Settings Persistence)
             LoadPaletteSettings();
-
-            // 3. Đảm bảo phần Spec cho toàn dự án khi mở lên luôn ở trạng thái thu lại
-            if (expanderProjectSpec != null)
-            {
-                expanderProjectSpec.IsExpanded = false;
-            }
 
             _isSettingsLoaded = true;
 
@@ -172,7 +187,10 @@ namespace TaiAiAddin.Views
             // 5. Đăng ký tự động ghi nhớ thao tác khi người dùng thay đổi dữ liệu
             HookSettingsPersistence();
 
-            Loaded += (s, e) => { try { InitMcpStatusListener(); } catch { } };
+            Loaded += (s, e) => {
+                try { InitMcpStatusListener(); } catch { }
+                try { ReloadHvacCatalog(); } catch { }
+            };
         }
 
 
@@ -411,6 +429,24 @@ namespace TaiAiAddin.Views
                     Grad1 = "#2979FF",
                     Grad2 = "#D946EF",
                     LogoTextBg = "#030712"
+                },
+
+                // Theme 9: Gemini Dark Glow (Nền Đen Tuyền Tuyệt Đối - True OLED Black)
+                new ThemeDefinition
+                {
+                    Name = "Gemini Dark Glow (Nền Đen Tuyền)",
+                    BgPrimary = "#000000",
+                    BgSurface = "#000000",
+                    BgSubCard = "#000000",
+                    BgHover = "#141414",
+                    BorderDivider = "#1E1E1E",
+                    AccentCyan = "#00E5FF",
+                    AccentAmber = "#38BDF8",
+                    TextPrimary = "#FFFFFF",
+                    TextSecondary = "#A0A0A0",
+                    Grad1 = "#00E5FF",
+                    Grad2 = "#3B82F6",
+                    LogoTextBg = "#000000"
                 }
 
             };
@@ -513,6 +549,9 @@ namespace TaiAiAddin.Views
             // 4. Kích hoạt hiệu ứng nền ảnh Galaxy (Theme 8)
             UpdateGalaxyVisual(themeIndex);
 
+            // 5. Kích hoạt hiệu ứng ánh sáng hào quang phát quang (Theme 9: Gemini Dark Glow)
+            UpdateGlowVisual(themeIndex);
+
             if (txtLogoText != null)
 
             {
@@ -554,14 +593,10 @@ namespace TaiAiAddin.Views
 
 
         private void UpdateThemeCardsUI(int activeIndex)
-
         {
-
-            Border[] cards = new Border[] { cardTheme1, cardTheme2, cardTheme3, cardTheme4, cardTheme5, cardTheme6, cardTheme7, cardTheme8 };
-
-            Border[] badges = new Border[] { badgeTheme1, badgeTheme2, badgeTheme3, badgeTheme4, badgeTheme5, badgeTheme6, badgeTheme7, badgeTheme8 };
-
-            Button[] buttons = new Button[] { btnApplyTheme1, btnApplyTheme2, btnApplyTheme3, btnApplyTheme4, btnApplyTheme5, btnApplyTheme6, btnApplyTheme7, btnApplyTheme8 };
+            Border[] cards = new Border[] { cardTheme1, cardTheme2, cardTheme3, cardTheme4, cardTheme5, cardTheme6, cardTheme7, cardTheme8, cardTheme9 };
+            Border[] badges = new Border[] { badgeTheme1, badgeTheme2, badgeTheme3, badgeTheme4, badgeTheme5, badgeTheme6, badgeTheme7, badgeTheme8, badgeTheme9 };
+            Button[] buttons = new Button[] { btnApplyTheme1, btnApplyTheme2, btnApplyTheme3, btnApplyTheme4, btnApplyTheme5, btnApplyTheme6, btnApplyTheme7, btnApplyTheme8, btnApplyTheme9 };
 
 
 
@@ -619,13 +654,26 @@ namespace TaiAiAddin.Views
                     if (_cachedGalaxyBitmap == null)
                     {
                         string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                        string[] candidatePaths = new string[]
+                        List<string> candidatePaths = new List<string>
                         {
                             Path.Combine(appData, "Autodesk", "ApplicationPlugins", "TaiAiAddin.bundle", "Contents", "Resources", "galaxy_bg.png"),
                             Path.Combine(appData, "TaiAiAddin", "galaxy_bg.png"),
-                            Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "Resources", "galaxy_bg.png"),
-                            @"D:01. NGUYEN TAN TAI\CODING AI\00.BAI 1_TOOLS\TaiAiAddin\Resources\galaxy_bg.png"
+                            @"D:\01. NGUYEN TAN TAI\CODING AI\00.BAI 1_TOOLS\TaiAiAddin\Resources\galaxy_bg.png"
                         };
+
+                        try
+                        {
+                            string asmLoc = Assembly.GetExecutingAssembly().Location;
+                            if (!string.IsNullOrEmpty(asmLoc))
+                            {
+                                string asmDir = Path.GetDirectoryName(asmLoc);
+                                if (!string.IsNullOrEmpty(asmDir))
+                                {
+                                    candidatePaths.Add(Path.Combine(asmDir, "Resources", "galaxy_bg.png"));
+                                }
+                            }
+                        }
+                        catch { }
 
                         foreach (string p in candidatePaths)
                         {
@@ -658,6 +706,70 @@ namespace TaiAiAddin.Views
             catch { }
         }
 
+        private void UpdateGlowVisual(int themeIndex)
+        {
+            try
+            {
+                if (themeIndex == 9)
+                {
+                    // Hào quang Neon Blue phong cách Gemini Dark Mode
+                    this.Resources["CardGlowEffect"] = new DropShadowEffect
+                    {
+                        Color = (Color)ColorConverter.ConvertFromString("#1D4ED8"),
+                        BlurRadius = 18,
+                        Direction = 270,
+                        ShadowDepth = 3.5,
+                        Opacity = 0.65
+                    };
+                    this.Resources["HeaderGlowEffect"] = new DropShadowEffect
+                    {
+                        Color = (Color)ColorConverter.ConvertFromString("#1D4ED8"),
+                        BlurRadius = 22,
+                        Direction = 270,
+                        ShadowDepth = 4,
+                        Opacity = 0.75
+                    };
+                    this.Resources["FocusedGlowEffect"] = new DropShadowEffect
+                    {
+                        Color = (Color)ColorConverter.ConvertFromString("#00E5FF"),
+                        BlurRadius = 16,
+                        Direction = 0,
+                        ShadowDepth = 0,
+                        Opacity = 0.75
+                    };
+                }
+                else
+                {
+                    // Đổ bóng nhẹ tiêu chuẩn cho các theme khác
+                    this.Resources["CardGlowEffect"] = new DropShadowEffect
+                    {
+                        Color = Colors.Black,
+                        BlurRadius = 6,
+                        Direction = 270,
+                        ShadowDepth = 2,
+                        Opacity = 0.25
+                    };
+                    this.Resources["HeaderGlowEffect"] = new DropShadowEffect
+                    {
+                        Color = Colors.Black,
+                        BlurRadius = 6,
+                        Direction = 270,
+                        ShadowDepth = 2,
+                        Opacity = 0.25
+                    };
+                    this.Resources["FocusedGlowEffect"] = new DropShadowEffect
+                    {
+                        Color = (Color)ColorConverter.ConvertFromString("#00E5FF"),
+                        BlurRadius = 8,
+                        Direction = 0,
+                        ShadowDepth = 0,
+                        Opacity = 0.4
+                    };
+                }
+            }
+            catch { }
+        }
+
         private void BtnApplyTheme1_Click(object sender, RoutedEventArgs e) { ApplyTheme(1); }
 
         private void BtnApplyTheme2_Click(object sender, RoutedEventArgs e) { ApplyTheme(2); }
@@ -673,6 +785,8 @@ namespace TaiAiAddin.Views
         private void BtnApplyTheme7_Click(object sender, RoutedEventArgs e) { ApplyTheme(7); }
 
         private void BtnApplyTheme8_Click(object sender, RoutedEventArgs e) { ApplyTheme(8); }
+
+        private void BtnApplyTheme9_Click(object sender, RoutedEventArgs e) { ApplyTheme(9); }
 
 
 
@@ -691,6 +805,8 @@ namespace TaiAiAddin.Views
         private void CardTheme7_MouseDown(object sender, MouseButtonEventArgs e) { ApplyTheme(7); }
 
         private void CardTheme8_MouseDown(object sender, MouseButtonEventArgs e) { ApplyTheme(8); }
+
+        private void CardTheme9_MouseDown(object sender, MouseButtonEventArgs e) { ApplyTheme(9); }
 
 
 
@@ -833,7 +949,11 @@ namespace TaiAiAddin.Views
                 return;
             }
 
-            if (panelName == "pnlMepHvac") ShowPanel(pnlMepHvac, btnMepHvac, "Phân hệ Điều hòa không khí (ĐHKK & Thông gió tòa nhà).");
+            if (panelName == "pnlMepHvac")
+            {
+                ShowPanel(pnlMepHvac, btnMepHvac, "Phân hệ Điều hòa không khí (ĐHKK & Thông gió tòa nhà).");
+                try { if (cbHvacCatalog != null && cbHvacCatalog.Items.Count == 0) ReloadHvacCatalog(); } catch { }
+            }
             else if (panelName == "pnlMepPlumbing") ShowPanel(pnlMepPlumbing, btnMepPlumbing, "Phân hệ Cấp thoát nước (Plumbing & Xử lý nước).");
             else if (panelName == "pnlMepFire") ShowPanel(pnlMepFire, btnMepFire, "Phân hệ Phòng Cháy Chữa Cháy (PCCC).");
             else if (panelName == "pnlMepXlmb") ShowPanel(pnlMepXlmb, btnMepXlmb, "Phân hệ Xử lý mặt bằng (XLMB - Smart Room Boundary).");
@@ -1140,12 +1260,74 @@ namespace TaiAiAddin.Views
 
 
 
-        private void BtnConfigUi_Click(object sender, RoutedEventArgs e)
-
+        private void BtnOpenSettings_Click(object sender, RoutedEventArgs e)
         {
+            SettingsDialog.ShowOrActivate();
+        }
 
-            ShowPanel(pnlConfigUi, null, "Cấu hình giao diện (UI/UX 5 Themes màu sắc & Bảng màu tương phản chuẩn).");
+        public void OpenConfigUi()
+        {
+            ShowPanel(pnlConfigUi, null, "Cấu hình giao diện (UI/UX Themes màu sắc & Bảng màu tương phản chuẩn).");
+        }
 
+        public void OpenConfigLayout()
+        {
+            ShowPanel(pnlConfigLayout, null, "Khởi tạo Layout, khung tên bản vẽ và tỷ lệ Viewport.");
+        }
+
+        public void OpenSpecElectrical()
+        {
+            ShowPanel(pnlSpecElectrical, null, "Spec Điện: Kích thước giá treo thang máng cáp, cao độ công tắc, ổ cắm, tủ điện.");
+        }
+
+        public void OpenSpecHvac()
+        {
+            ShowPanel(pnlSpecHvac, null, "Spec ĐHKK: Quy cách ống gió, cùm treo, cao độ dàn lạnh FCU, miệng gió.");
+        }
+
+        public void OpenSpecPlumbing()
+        {
+            ShowPanel(pnlSpecPlumbing, null, "Spec Cấp Thoát Nước: Độ dốc thoát, cùm treo ống và cao độ thiết bị vệ sinh.");
+        }
+
+        public void OpenSpecEnclosure()
+        {
+            ShowPanel(pnlSpecEnclosure, null, "Spec Cho Phần Vẽ Tủ Điện: Kích thước vỏ tủ, độ dày tôn, thanh cái, khoảng cách thiết bị.");
+        }
+
+        public void OpenSpecFire()
+        {
+            ShowPanel(pnlSpecFire, null, "Spec Cho PCCC: Cao độ đầu phun Sprinkler, van báo động, hộp chữa cháy vách tường.");
+        }
+
+        public void OpenSpecElv()
+        {
+            ShowPanel(pnlSpecElv, null, "Spec Điện Nhẹ (ELV): Camera CCTV, mạng Data/Tel, âm thanh thông báo PA, SmartHome & BMS.");
+        }
+
+        public void OpenSpecEarthing()
+        {
+            ShowPanel(pnlSpecEarthing, null, "Spec Chống Sét & Tiếp Địa: Kim thu sét ESE, cọc đồng D16, băng đồng 25x3, R <= 10/4/1 Ohm.");
+        }
+
+        public void OpenSpecSubstation()
+        {
+            ShowPanel(pnlSpecSubstation, null, "Spec Trạm Biến Áp & Máy Phát: Máy biến áp Kiosk/Dry, phòng máy phát tiêu âm, rãnh cáp.");
+        }
+
+        public void OpenSpecLighting()
+        {
+            ShowPanel(pnlSpecLighting, null, "Spec Chiếu Sáng & Điều Khiển: Tiêu chuẩn độ rọi Lux TCVN 7114, cảm biến hiện diện PIR, DALI.");
+        }
+
+        public void OpenSpecSolar()
+        {
+            ShowPanel(pnlSpecSolar, null, "Spec Năng Lượng Mặt Trời: Tấm pin PV 550-670Wp, Inverter hòa lưới, hệ thống Zero Export.");
+        }
+
+        private void BtnConfigUi_Click(object sender, RoutedEventArgs e)
+        {
+            OpenConfigUi();
         }
 
 
@@ -1312,93 +1494,10 @@ namespace TaiAiAddin.Views
 
         private void BtnMepXlmb_Click(object sender, RoutedEventArgs e)
         {
-            ShowPanel(pnlMepXlmb, btnMepXlmb, "Phân hệ Xử lý mặt bằng (XLMB - Tự động nhận diện tường, cột, tự tìm điểm góc & bo kín phòng hở).");
+            ShowPanel(pnlMepXlmb, btnMepXlmb, "Phân hệ Tiền xử lý & Chuẩn hóa mặt bằng AI (7 bước).");
         }
 
-        private void BtnExecuteXlmb_Click(object sender, RoutedEventArgs e)
-        {
-            Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
-            if (doc != null)
-            {
-                doc.SendStringToExecute("_.XLMB \n", true, false, false);
-            }
-        }
-
-        private void BtnBaoPhong_Click(object sender, RoutedEventArgs e)
-        {
-            Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
-            if (doc != null)
-            {
-                doc.SendStringToExecute("_.BAOPHONG \n", true, false, false);
-            }
-        }
-
-        public RoomBoundaryOptions GetXlmbOptions()
-        {
-            double textHeight = 250.0;
-            double th;
-            if (txtXlmbTextHeight != null && double.TryParse(txtXlmbTextHeight.Text, out th) && th > 0)
-            {
-                textHeight = th;
-            }
-
-            double snapTol = 20.0;
-            double tol;
-            if (txtXlmbTolerance != null && double.TryParse(txtXlmbTolerance.Text, out tol) && tol > 0)
-            {
-                snapTol = tol;
-            }
-
-            return new RoomBoundaryOptions
-            {
-                TextHeight = textHeight,
-                SnapToleranceMm = snapTol,
-                BoundaryLayer = (txtXlmbLayerBoundary != null && !string.IsNullOrWhiteSpace(txtXlmbLayerBoundary.Text)) ? txtXlmbLayerBoundary.Text.Trim() : "DUONG_BAO",
-                TextLayer = (txtXlmbLayerText != null && !string.IsNullOrWhiteSpace(txtXlmbLayerText.Text)) ? txtXlmbLayerText.Text.Trim() : "DUONG_BAO_TEXT",
-                RoundCurvedWalls = (chkXlmbCurvedWalls != null && chkXlmbCurvedWalls.IsChecked.HasValue) ? chkXlmbCurvedWalls.IsChecked.Value : true,
-                CreateMText = (chkXlmbCreateText != null && chkXlmbCreateText.IsChecked.HasValue) ? chkXlmbCreateText.IsChecked.Value : true,
-                AttachXData = (chkXlmbAttachXData != null && chkXlmbAttachXData.IsChecked.HasValue) ? chkXlmbAttachXData.IsChecked.Value : true,
-                ExcludeFurniture = (chkXlmbExcludeFurniture != null && chkXlmbExcludeFurniture.IsChecked.HasValue) ? chkXlmbExcludeFurniture.IsChecked.Value : true,
-                AutoCloseCornerGaps = (chkXlmbAutoCornerGap != null && chkXlmbAutoCornerGap.IsChecked.HasValue) ? chkXlmbAutoCornerGap.IsChecked.Value : true,
-                ExcludeGrids = true
-            };
-        }
-
-        public void UpdateXlmbResults(RoomBoundaryResult res)
-        {
-            if (res == null) return;
-
-            if (txtXlmbCount != null)
-            {
-                txtXlmbCount.Text = string.Format("{0} phòng", res.RoomCount);
-            }
-
-            if (txtXlmbSummary != null)
-            {
-                txtXlmbSummary.Text = res.Success
-                    ? string.Format("Đã vẽ {0} phòng. Tổng diện tích: {1:F2} m²", res.RoomCount, res.TotalAreaM2)
-                    : (res.Message ?? "Không phát hiện được phòng hợp lệ.");
-            }
-
-            if (lstXlmbRooms != null)
-            {
-                lstXlmbRooms.ItemsSource = res.Rooms;
-            }
-        }
-
-        private void BtnViewRoomXData_Click(object sender, RoutedEventArgs e)
-        {
-            Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
-            if (doc == null) return;
-            doc.SendStringToExecute("_.XEMPHONG \n", true, false, false);
-        }
-
-
-
-
-        #endregion
-
-
+        // [MODULE HÓA NHÁNH 5] Toàn bộ logic và nghiệp vụ Xử Lý Mặt Bằng (XLMB) đã được tách sang file: Views/PaletteParts/TaiAiPaletteControl.Xlmb.cs
 
         #region Các Button Thao Tác Nhanh & Điều Hướng Spec
 
@@ -1501,2401 +1600,11 @@ namespace TaiAiAddin.Views
         }
         #endregion
 
-        #region Các Button Thiết Kế Tủ Điện & Bóc Tách Khối Lượng Dây Ống
-        private void BtnOpenElectricalDialog_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                Window dialog = null;
-                try
-                {
-                    Type dlgType = typeof(TaiAiPaletteControl).Assembly.GetType("TaiAiAddin.Views.ElectricalPanelDialog");
-                    if (dlgType != null)
-                    {
-                        dialog = Activator.CreateInstance(dlgType) as Window;
-                    }
-                }
-                catch { }
 
-                if (dialog == null)
-                {
-                    dialog = new ElectricalPanelDialog();
-                }
-
-                dialog.ShowDialog();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(string.Format("Lỗi mở giao diện Tủ điện: {0}", ex.Message), "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void BtnOpenEnclosureDialog_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                EnclosureLayoutDialog dialog = new EnclosureLayoutDialog();
-                dialog.ShowDialog();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(string.Format("Lỗi mở giao diện Mặt Bằng Bố Trí Vỏ Tủ: {0}", ex.Message), "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void BtnSelectAndCalculate_Click(object sender, RoutedEventArgs e)
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            if (doc == null)
-            {
-                MessageBox.Show("Không tìm thấy bản vẽ nào đang mở!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            try
-            {
-                Application.MainWindow.Focus();
-
-                using (DocumentLock docLock = doc.LockDocument())
-                {
-                    txtStatus.Text = "Đang chờ người dùng quét chọn đối tượng trên bản vẽ...";
-
-                    _currentStats = _calculatorService.CollectAndCalculateLengths(doc, out _currentSummary);
-
-                    if (_currentStats == null || _currentStats.Count == 0)
-                    {
-                        txtStatus.Text = "Không có đối tượng Line/Pline nào được chọn.";
-                        return;
-                    }
-
-                    bool isMeters = rbMeters.IsChecked == true;
-                    dgResults.ItemsSource = null;
-                    dgResults.ItemsSource = _currentStats;
-
-                    txtTotalCount.Text = string.Format("{0} đối tượng", _currentSummary.GrandTotalCount);
-                    txtTotalLength.Text = isMeters
-                        ? string.Format("{0} m", _currentSummary.FormattedGrandTotalM)
-                        : string.Format("{0:N2} mm", _currentSummary.GrandTotalLength);
-
-                    btnCreateTableOnly.IsEnabled = true;
-                    txtStatus.Text = string.Format("Đã quét thành công {0} đối tượng qua {1} Layer.", _currentSummary.GrandTotalCount, _currentStats.Count);
-
-                    if (chkAutoCreateTable.IsChecked == true)
-                    {
-                        txtStatus.Text = "Vui lòng click chọn điểm đặt Bảng trên bản vẽ...";
-                        bool created = _calculatorService.CreateSummaryTable(doc, _currentStats, _currentSummary, isMeters);
-                        if (created)
-                        {
-                            txtStatus.Text = "Đã tạo bảng thống kê thành công trên AutoCAD!";
-                        }
-                        else
-                        {
-                            txtStatus.Text = "Đã hoàn thành thống kê (Chưa chèn bảng).";
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                txtStatus.Text = string.Format("Lỗi: {0}", ex.Message);
-                if (doc.Editor != null)
-                {
-                    doc.Editor.WriteMessage(string.Format("\n[TaiAi Error] {0}\n{1}", ex.Message, ex.StackTrace));
-                }
-            }
-        }
-
-        private void BtnCreateTableOnly_Click(object sender, RoutedEventArgs e)
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            if (doc == null) return;
-
-            if (_currentStats == null || _currentStats.Count == 0)
-            {
-                MessageBox.Show("Chưa có dữ liệu thống kê. Vui lòng quét chọn đối tượng trước!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            try
-            {
-                Application.MainWindow.Focus();
-
-                using (DocumentLock docLock = doc.LockDocument())
-                {
-                    txtStatus.Text = "Vui lòng chọn điểm đặt Bảng trên bản vẽ...";
-                    bool isMeters = rbMeters.IsChecked == true;
-                    bool created = _calculatorService.CreateSummaryTable(doc, _currentStats, _currentSummary, isMeters);
-
-                    if (created)
-                    {
-                        txtStatus.Text = "Đã chèn lại bảng thành công!";
-                    }
-                    else
-                    {
-                        txtStatus.Text = "Hủy thao tác chèn bảng.";
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                txtStatus.Text = string.Format("Lỗi: {0}", ex.Message);
-                if (doc.Editor != null)
-                {
-                    doc.Editor.WriteMessage(string.Format("\n[TaiAi Error] {0}", ex.Message));
-                }
-            }
-        }
-        #endregion
-
-        #region Nghiệp Vụ Thang Máng Cáp (TMC)
-        private CableTrayParams GetCableTrayParamsFromUi()
-        {
-            CableTrayType trayType = CableTrayType.Trunking;
-            if (cbTmcType != null && cbTmcType.SelectedIndex == 1)
-                trayType = CableTrayType.Ladder;
-            else if (cbTmcType != null && cbTmcType.SelectedIndex == 2)
-                trayType = CableTrayType.Tray;
-
-            double widthMm = 300;
-            if (cbTmcWidth != null)
-            {
-                string wText = cbTmcWidth.Text;
-                ComboBoxItem itemW = cbTmcWidth.SelectedItem as ComboBoxItem;
-                if (string.IsNullOrEmpty(wText) && itemW != null && itemW.Content != null)
-                    wText = itemW.Content.ToString();
-                if (!string.IsNullOrEmpty(wText))
-                {
-                    System.Text.RegularExpressions.Match match = System.Text.RegularExpressions.Regex.Match(wText, @"\d+");
-                    if (match.Success) double.TryParse(match.Value, out widthMm);
-                }
-                if (widthMm <= 0) widthMm = 300;
-            }
-
-            double heightMm = 100;
-            if (cbTmcHeight != null)
-            {
-                string hText = cbTmcHeight.Text;
-                ComboBoxItem itemH = cbTmcHeight.SelectedItem as ComboBoxItem;
-                if (string.IsNullOrEmpty(hText) && itemH != null && itemH.Content != null)
-                    hText = itemH.Content.ToString();
-                if (!string.IsNullOrEmpty(hText))
-                {
-                    System.Text.RegularExpressions.Match match = System.Text.RegularExpressions.Regex.Match(hText, @"\d+");
-                    if (match.Success) double.TryParse(match.Value, out heightMm);
-                }
-                if (heightMm <= 0) heightMm = 100;
-            }
-
-            double supportSpacingM = 1.5;
-            if (txtTmcSupportSpacing != null)
-            {
-                double.TryParse(txtTmcSupportSpacing.Text, out supportSpacingM);
-                if (supportSpacingM <= 0) supportSpacingM = 1.5;
-            }
-
-            double thicknessMm = 1.5;
-            if (txtTmcThickness != null)
-            {
-                double.TryParse(txtTmcThickness.Text, out thicknessMm);
-                if (thicknessMm <= 0) thicknessMm = 1.5;
-            }
-
-            bool insertSupports = (chkTmcInsertSupports != null && chkTmcInsertSupports.IsChecked == true);
-            bool addAnnotations = (chkTmcAddAnnotations != null && chkTmcAddAnnotations.IsChecked == true);
-
-            return new CableTrayParams
-            {
-                Type = trayType,
-                WidthMm = widthMm,
-                HeightMm = heightMm,
-                ThicknessMm = thicknessMm,
-                SupportSpacingM = supportSpacingM,
-                InsertSupports = insertSupports,
-                AddAnnotations = addAnnotations
-            };
-        }
-
-        public void OnTmcDimensionSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            OnTmcDimensionChanged(sender, e);
-        }
-
-        public void OnTmcDimensionChanged(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-                if (doc == null) return;
-                Editor ed = doc.Editor;
-                PromptSelectionResult psr = ed.SelectImplied();
-                if (psr.Status == PromptStatus.OK && psr.Value != null && psr.Value.Count > 0)
-                {
-                    CableTrayParams p = GetCableTrayParamsFromUi();
-                    int count = CableTrayService.UpdateBlockReferenceDimensions(doc, p, psr.Value);
-                    if (count > 0 && txtStatus != null)
-                    {
-                        txtStatus.Text = string.Format("Đã tự động điều chỉnh {0} Block theo thông số W{1:F0}xH{2:F0}!",
-                            count, p.WidthMm, p.HeightMm);
-                    }
-                }
-            }
-            catch { }
-        }
-
-        private void BtnUpdateSelectedTmc_Click(object sender, RoutedEventArgs e)
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            if (doc == null)
-            {
-                MessageBox.Show("Không tìm thấy bản vẽ nào đang mở!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            try
-            {
-                CableTrayParams p = GetCableTrayParamsFromUi();
-                Application.MainWindow.Focus();
-                int count = CableTrayService.UpdateBlockReferenceDimensions(doc, p);
-                if (count > 0 && txtStatus != null)
-                {
-                    txtStatus.Text = string.Format("Đã cập nhật thành công {0} Block Thang Máng Cáp theo kích thước W{1:F0}xH{2:F0}!",
-                        count, p.WidthMm, p.HeightMm);
-                }
-            }
-            catch (Exception ex)
-            {
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi cập nhật: {0}", ex.Message);
-            }
-        }
-
-        private void StartDrawTmcWithType(CableTrayType type, string typeName)
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            if (doc == null)
-            {
-                MessageBox.Show("Không tìm thấy bản vẽ nào đang mở!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            try
-            {
-                // Đồng bộ ngầm ComboBox
-                if (cbTmcType != null)
-                {
-                    if (type == CableTrayType.Trunking) cbTmcType.SelectedIndex = 0;
-                    else if (type == CableTrayType.Ladder) cbTmcType.SelectedIndex = 1;
-                    else if (type == CableTrayType.Tray) cbTmcType.SelectedIndex = 2;
-                }
-
-                CableTrayParams p = GetCableTrayParamsFromUi();
-                p.Type = type; // Gán đúng loại của nút bấm
-                CableTrayService.ActiveParams = p;
-
-                if (txtStatus != null)
-                {
-                    txtStatus.Text = string.Format("⚡ Live Jig {0} (W{1}xH{2}): Click điểm đầu trên CAD để bắt đầu kéo dãn...", typeName, p.WidthMm, p.HeightMm);
-                }
-
-                // Gửi lệnh NTTTMC vào AutoCAD để chạy trong Native Command Context: chuột kéo Jig mượt mà 60 FPS, bắt điểm OSNAP chuẩn xác
-                doc.SendStringToExecute("NTTTMC\n", true, false, false);
-            }
-            catch (Exception ex)
-            {
-                if (txtStatus != null) txtStatus.Text = "Lỗi kích hoạt Live Jig: " + ex.Message;
-            }
-        }
-
-        private void BtnDrawTray_Click(object sender, RoutedEventArgs e)
-        {
-            StartDrawTmcWithType(CableTrayType.Tray, "Khay Cáp (Tray)");
-        }
-
-        private void BtnDrawTrunking_Click(object sender, RoutedEventArgs e)
-        {
-            StartDrawTmcWithType(CableTrayType.Trunking, "Trunking (Máng Cáp)");
-        }
-
-        private void BtnDrawLadder_Click(object sender, RoutedEventArgs e)
-        {
-            StartDrawTmcWithType(CableTrayType.Ladder, "Thang Điện (Ladder)");
-        }
-
-        private void BtnDrawTmcManual_Click(object sender, RoutedEventArgs e)
-        {
-            BtnDrawTrunking_Click(sender, e);
-        }
-        #endregion
-
-        private void BtnRouteTmcAlongPl_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-
-            if (doc == null)
-
-            {
-
-                MessageBox.Show("Không tìm thấy bản vẽ nào đang mở!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
-
-                return;
-
-            }
-
-            Editor ed = doc.Editor;
-
-
-
-            try
-
-            {
-
-                CableTrayParams p = GetCableTrayParamsFromUi();
-
-                Application.MainWindow.Focus();
-
-
-
-                int routedCount = 0;
-
-                while (true)
-
-                {
-
-                    PromptEntityOptions peo = new PromptEntityOptions("\n[NTT TOOLS] Chọn đường Polyline (PL) định tuyến Thang Máng Cáp (hoặc ENTER/ESC để kết thúc): ");
-
-                    peo.SetRejectMessage("\nChỉ được chọn đối tượng Polyline!");
-
-                    peo.AddAllowedClass(typeof(Polyline), exactMatch: false);
-
-                    peo.AllowNone = true;
-
-                    PromptEntityResult per = ed.GetEntity(peo);
-
-                    if (per.Status != PromptStatus.OK) break;
-
-
-
-                    using (DocumentLock docLock = doc.LockDocument())
-
-                    {
-
-                        CableTrayRouteResult res = CableTrayService.RouteCableTrayAlongPolyline(doc, per.ObjectId, p);
-
-                        if (res != null)
-
-                        {
-
-                            _paletteLastTmcResult = res;
-
-                            _paletteLastTmcParams = p;
-
-                            routedCount++;
-
-                            txtStatus.Text = string.Format("Đã vẽ xong tuyến {0} {1}: {2:F2}m, {3} Co 90°, {4} Co 45°, {5} Giá đỡ.",
-
-                                res.TypeName, res.DimensionLabel, res.TotalLengthM, res.Elbow90Count, res.Elbow45Count, res.SupportCount);
-
-                        }
-
-                    }
-
-                }
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                txtStatus.Text = string.Format("Lỗi định tuyến TMC: {0}", ex.Message);
-
-                if (ed != null)
-
-                {
-
-                    ed.WriteMessage(string.Format("\n[NTT Error] {0}", ex.Message));
-
-                }
-
-            }
-
-        }
-
-
-
-        private void BtnDrawTmcBOMTable_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-
-            if (doc == null)
-
-            {
-
-                MessageBox.Show("Không tìm thấy bản vẽ nào đang mở!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
-
-                return;
-
-            }
-
-
-
-            try
-
-            {
-
-                CableTrayParams p = _paletteLastTmcParams ?? GetCableTrayParamsFromUi();
-
-                CableTrayRouteResult res = _paletteLastTmcResult;
-
-
-
-                if (res == null)
-
-                {
-
-                    res = new CableTrayRouteResult
-
-                    {
-
-                        TypeName = p.Type == CableTrayType.Ladder ? "Thang Cáp (Cable Ladder)" : (p.Type == CableTrayType.Tray ? "Khay Cáp (Perforated Cable Tray)" : "Máng Cáp (Cable Trunking)"),
-
-                        DimensionLabel = string.Format("{0}x{1} mm", p.WidthMm, p.HeightMm),
-
-                        WidthMm = p.WidthMm,
-
-                        HeightMm = p.HeightMm,
-
-                        ThicknessMm = p.ThicknessMm,
-
-                        TotalLengthM = 15.0,
-
-                        SupportCount = 11,
-
-                        ElbowCount = 2,
-
-                        SegmentCount = 3,
-
-                        SheetMetalWeightKg = 110.0
-
-                    };
-
-                }
-
-
-
-                Application.MainWindow.Focus();
-
-                using (DocumentLock docLock = doc.LockDocument())
-
-                {
-
-                    txtStatus.Text = "Click chọn điểm đặt Bảng Bóc Tách Khối Lượng TMC trên bản vẽ...";
-
-                    CableTrayService.DrawCableTrayBOMTableInCad(doc, res, p);
-
-                    txtStatus.Text = "Đã xuất Bảng Bóc Tách Khối Lượng TMC vào bản vẽ CAD!";
-
-                }
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                txtStatus.Text = string.Format("Lỗi xuất bảng BOM: {0}", ex.Message);
-
-                if (doc.Editor != null)
-
-                {
-
-                    doc.Editor.WriteMessage(string.Format("\n[NTT Error] {0}", ex.Message));
-
-                }
-
-            }
-
-        }
-
-
-
-        private void BtnOpenTmcFolder_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            CableTrayService.OpenLibraryFolder();
-
-            if (txtStatus != null) txtStatus.Text = "Đã mở thư mục Thư Viện Thang Máng Cáp trong File Explorer.";
-
-        }
-
-
-
-        #endregion
-
-
-
-        #region Phân Hệ Phòng Cháy Chữa Cháy (PCCC)
-
-
-
-        private void BtnOpenPcccFolder_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            FireProtectionService.OpenLibraryFolder();
-
-            if (txtStatus != null) txtStatus.Text = "Đã mở thư mục Thư Viện PCCC trong File Explorer.";
-
-        }
-
-
-
-        private void BtnReloadPcccCatalog_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            if (txtStatus != null) txtStatus.Text = "Đã làm mới danh mục 13 block thư viện PCCC tiêu chuẩn!";
-
-        }
-
-
-
-        private void BtnInsertPcccBlock_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null)
-
-                {
-
-                    if (txtStatus != null) txtStatus.Text = "Không có bản vẽ nào đang mở!";
-
-                    return;
-
-                }
-
-
-
-                int idx = cbPcccCatalog != null ? cbPcccCatalog.SelectedIndex : 0;
-
-                var catalog = FireProtectionService.GetCatalog();
-
-                if (idx < 0 || idx >= catalog.Count) idx = 0;
-
-                var item = catalog[idx];
-
-
-
-                bool drawCov = chkDrawBlockCoverage != null && chkDrawBlockCoverage.IsChecked == true;
-
-                double covR = drawCov ? item.DefaultCoverageRadius : 0;
-
-
-
-                Application.MainWindow.Focus();
-
-                FireProtectionService.InsertSingleBlockWithPrompt(doc, Path.GetFileNameWithoutExtension(item.FileName), item.FileName, covR);
-
-
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Đã chèn {0} thành công!", item.Name);
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi chèn block: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void CbPcccHazard_SelectionChanged(object sender, SelectionChangedEventArgs e)
-
-        {
-
-            if (cbPcccHazard == null || txtSprinklerDx == null) return;
-
-            int idx = cbPcccHazard.SelectedIndex;
-
-            if (idx == 0) // Thấp
-
-            {
-
-                txtSprinklerDx.Text = "3.6";
-
-                txtSprinklerDy.Text = "3.6";
-
-                txtSprinklerWallX.Text = "1.8";
-
-                txtSprinklerWallY.Text = "1.8";
-
-                txtSprinklerCoverageR.Text = "2.1";
-
-            }
-
-            else if (idx == 1) // TB1
-
-            {
-
-                txtSprinklerDx.Text = "3.2";
-
-                txtSprinklerDy.Text = "3.2";
-
-                txtSprinklerWallX.Text = "1.6";
-
-                txtSprinklerWallY.Text = "1.6";
-
-                txtSprinklerCoverageR.Text = "2.0";
-
-            }
-
-            else if (idx == 2) // TB2
-
-            {
-
-                txtSprinklerDx.Text = "3.0";
-
-                txtSprinklerDy.Text = "3.0";
-
-                txtSprinklerWallX.Text = "1.5";
-
-                txtSprinklerWallY.Text = "1.5";
-
-                txtSprinklerCoverageR.Text = "1.9";
-
-            }
-
-            else if (idx == 3) // Cao
-
-            {
-
-                txtSprinklerDx.Text = "2.4";
-
-                txtSprinklerDy.Text = "2.4";
-
-                txtSprinklerWallX.Text = "1.2";
-
-                txtSprinklerWallY.Text = "1.2";
-
-                txtSprinklerCoverageR.Text = "1.5";
-
-            }
-
-        }
-
-
-
-        private void BtnAutoSprinkler_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null)
-
-                {
-
-                    if (txtStatus != null) txtStatus.Text = "Không có bản vẽ nào đang mở!";
-
-                    return;
-
-                }
-
-
-
-                double dx = 3.0, dy = 3.0, wx = 1.5, wy = 1.5, covR = 2.1;
-
-                double.TryParse(txtSprinklerDx != null ? txtSprinklerDx.Text : "3.0", out dx);
-
-                double.TryParse(txtSprinklerDy != null ? txtSprinklerDy.Text : "3.0", out dy);
-
-                double.TryParse(txtSprinklerWallX != null ? txtSprinklerWallX.Text : "1.5", out wx);
-
-                double.TryParse(txtSprinklerWallY != null ? txtSprinklerWallY.Text : "1.5", out wy);
-
-                double.TryParse(txtSprinklerCoverageR != null ? txtSprinklerCoverageR.Text : "2.1", out covR);
-
-
-
-                string blkFile = "Sprinkler_Pendant.dwg";
-
-                int spkTypeIdx = cbSprinklerType != null ? cbSprinklerType.SelectedIndex : 0;
-
-                if (spkTypeIdx == 1) blkFile = "Sprinkler_Upright.dwg";
-
-                else if (spkTypeIdx == 2) blkFile = "Sprinkler_Sidewall.dwg";
-
-
-
-                SprinklerLayoutParams cfg = new SprinklerLayoutParams
-
-                {
-
-                    BlockFileName = blkFile,
-
-                    SpacingX = dx,
-
-                    SpacingY = dy,
-
-                    WallOffsetX = wx,
-
-                    WallOffsetY = wy,
-
-                    DrawCoverageCircle = chkCoverageCircle != null && chkCoverageCircle.IsChecked == true,
-
-                    CoverageRadius = covR,
-
-                    ConnectPipes = chkConnectPipes != null && chkConnectPipes.IsChecked == true
-
-                };
-
-
-
-                Application.MainWindow.Focus();
-
-                double roomArea = 0;
-
-                int count = FireProtectionService.AutoLayoutSprinklersInCad(doc, cfg, out roomArea);
-
-
-
-                if (count > 0)
-
-                {
-
-                    string msg = string.Format("✓ Đã rải thành công {0} đầu phun Sprinkler. S phòng = {1:F1} m²", count, roomArea);
-
-                    if (txtSprinklerResult != null) txtSprinklerResult.Text = msg;
-
-                    if (txtStatus != null) txtStatus.Text = msg;
-
-                }
-
-                else
-
-                {
-
-                    if (txtSprinklerResult != null) txtSprinklerResult.Text = "Đã hủy hoặc không bố trí được đầu phun.";
-
-                }
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtSprinklerResult != null) txtSprinklerResult.Text = string.Format("Lỗi: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private PcccHydraulicInput GetHydraulicInputFromUi()
-
-        {
-
-            int nHeads = 12, nWall = 2;
-
-            double qSpk = 1.2, qWall = 2.5, hStat = 35.0, lPipe = 120.0, pMin = 10.0, cVal = 120.0;
-
-
-
-            int.TryParse(txtHydDesignHeads != null ? txtHydDesignHeads.Text : "12", out nHeads);
-
-            double.TryParse(txtHydSpkHeadFlow != null ? txtHydSpkHeadFlow.Text : "1.2", out qSpk);
-
-            int.TryParse(txtHydWallCount != null ? txtHydWallCount.Text : "2", out nWall);
-
-            double.TryParse(txtHydWallFlow != null ? txtHydWallFlow.Text : "2.5", out qWall);
-
-            double.TryParse(txtHydStaticHeight != null ? txtHydStaticHeight.Text : "35.0", out hStat);
-
-            double.TryParse(txtHydPipeLength != null ? txtHydPipeLength.Text : "120.0", out lPipe);
-
-            double.TryParse(txtHydResidualP != null ? txtHydResidualP.Text : "10.0", out pMin);
-
-            double.TryParse(txtHydC != null ? txtHydC.Text : "120", out cVal);
-
-
-
-            return new PcccHydraulicInput
-
-            {
-
-                DesignHeadCount = nHeads,
-
-                SprinklerFlowPerHead = qSpk,
-
-                WallHydrantCount = nWall,
-
-                WallHydrantFlow = qWall,
-
-                StaticHeight = hStat,
-
-                EquivalentPipeLength = lPipe,
-
-                ResidualPressure = pMin,
-
-                HazenWilliamsC = cVal
-
-            };
-
-        }
-
-
-
-        private void BtnCalcHydraulics_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                PcccHydraulicInput inp = GetHydraulicInputFromUi();
-
-                PcccHydraulicResult res = FireProtectionService.CalculateHydraulics(inp);
-
-
-
-                if (txtResFlow != null) txtResFlow.Text = string.Format("{0:F1} l/s ({1:F1} m³/h)", res.TotalFlowLs, res.TotalFlowM3h);
-
-                if (txtResHead != null) txtResHead.Text = string.Format("{0:F1} m ({1:F1} bar)", res.TotalHeadH, res.TotalHeadH / 10.0);
-
-                if (txtResPipe != null) txtResPipe.Text = string.Format("{0} (v = {1:F2} m/s)", res.PipeDiameter, res.VelocityMs);
-
-                if (txtResPower != null) txtResPower.Text = string.Format("{0:F1} kW ({1:F1} HP)", res.PumpPowerKw, res.PumpPowerHp);
-
-                if (txtResJockey != null) txtResJockey.Text = string.Format("{0:F1} m³/h - {1:F0} m ({2:F1} kW)", res.JockeyFlowM3h, res.JockeyHeadM, res.JockeyPowerKw);
-
-
-
-                if (txtStatus != null) txtStatus.Text = string.Format("✓ Đã tính xong: Q={0:F1} l/s, H={1:F1}m, Bơm={2:F1} kW", res.TotalFlowLs, res.TotalHeadH, res.PumpPowerKw);
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi tính thủy lực: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void BtnDrawHydTable_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null)
-
-                {
-
-                    if (txtStatus != null) txtStatus.Text = "Không có bản vẽ nào đang mở!";
-
-                    return;
-
-                }
-
-
-
-                PcccHydraulicInput inp = GetHydraulicInputFromUi();
-
-                PcccHydraulicResult res = FireProtectionService.CalculateHydraulics(inp);
-
-
-
-                Application.MainWindow.Focus();
-
-                FireProtectionService.DrawHydraulicTableInCad(doc, res, inp);
-
-
-
-                if (txtStatus != null) txtStatus.Text = "✓ Đã vẽ Bảng Tính Toán Thủy Lực PCCC vào CAD thành công!";
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi vẽ bảng: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void BtnQuickPlaceHoseCabinet_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlaceQuickPcccDevice("Tu_Chua_Chay_Vach_Tuong", "Tu_Chua_Chay_Vach_Tuong.dwg", 25.0);
-
-        }
-
-
-
-        private void BtnQuickPlaceAlarmValve_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlaceQuickPcccDevice("Van_Bao_Dong", "Van_Bao_Dong.dwg", 0);
-
-        }
-
-
-
-        private void BtnQuickPlaceMfz4_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlaceQuickPcccDevice("Binh_MFZ4_Bot", "Binh_MFZ4_Bot.dwg", 0);
-
-        }
-
-
-
-        private void BtnQuickPlaceMt3_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlaceQuickPcccDevice("Binh_MT3_CO2", "Binh_MT3_CO2.dwg", 0);
-
-        }
-
-
-
-        private void PlaceQuickPcccDevice(string blkName, string dwgFile, double covR)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null) return;
-
-                Application.MainWindow.Focus();
-
-                FireProtectionService.InsertSingleBlockWithPrompt(doc, blkName, dwgFile, covR);
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Đã bố trí {0} thành công!", blkName);
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi bố trí: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        #endregion
-
-
-
-        #region Nghiệp Vụ Phân Hệ Điều Hòa Không Khí (ĐHKK & Thông Gió)
-
-
-
-        private void BtnOpenHvacFolder_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            HvacService.OpenLibraryFolder();
-
-        }
-
-
-
-        private void BtnReloadHvacCatalog_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                if (txtHvacLibPath != null) txtHvacLibPath.Text = HvacService.GetPrimaryLibraryPath();
-
-                if (txtStatus != null) txtStatus.Text = "Đã cập nhật lại thư mục Block ĐHKK!";
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-                private void BtnRouteDuctAlongPl_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null)
-
-                {
-
-                    if (txtStatus != null) txtStatus.Text = "Không có bản vẽ nào đang mở!";
-
-                    return;
-
-                }
-
-
-
-                // Đọc thông số UI trước khi chuyển focus sang AutoCAD
-
-                string sysLayer = "Gió cấp";
-
-                if (cbDuctSystemLayer != null)
-
-                {
-
-                    ComboBoxItem item = cbDuctSystemLayer.SelectedItem as ComboBoxItem;
-
-                    if (item != null && item.Content != null) sysLayer = item.Content.ToString();
-
-                }
-
-
-
-                double q0 = 3000.0, v = 6.0, h = 300.0, stepDown = 20.0;
-
-                double.TryParse(txtDuctFlowCmh != null ? txtDuctFlowCmh.Text : "3000", out q0);
-
-                double.TryParse(txtDuctVelocity != null ? txtDuctVelocity.Text : "6.0", out v);
-
-                double.TryParse(txtDuctHeight != null ? txtDuctHeight.Text : "300", out h);
-
-
-
-                if (cbDuctStepDown != null)
-
-                {
-
-                    switch (cbDuctStepDown.SelectedIndex)
-
-                    {
-
-                        case 0: stepDown = 0.0; break;
-
-                        case 1: stepDown = 15.0; break;
-
-                        case 2: stepDown = 20.0; break;
-
-                        case 3: stepDown = 25.0; break;
-
-                        case 4: stepDown = 30.0; break;
-
-                    }
-
-                }
-
-
-
-                DuctRoutingParams p = new DuctRoutingParams
-
-                {
-
-                    SystemType = sysLayer,
-
-                    InitialAirFlowCmh = q0,
-
-                    VelocityMs = v,
-
-                    FixedHeightMm = h,
-
-                    StepDownPercent = stepDown,
-
-                    DrawDoubleLine = chkDuctDoubleLine == null || chkDuctDoubleLine.IsChecked == true,
-
-                    DrawElbows = true,
-
-                    DrawCenterline = chkDuctCenterline != null && chkDuctCenterline.IsChecked == true,
-
-                    AddAnnotations = chkDuctAnnotations == null || chkDuctAnnotations.IsChecked == true
-
-                };
-
-
-
-                Application.MainWindow.Focus();
-
-                using (DocumentLock docLock = doc.LockDocument())
-
-                {
-
-                    Editor ed = doc.Editor;
-
-                    PromptEntityOptions peo = new PromptEntityOptions("\n[ĐHKK] Chọn đường Polyline (PL) định tuyến ống gió: ");
-
-                    peo.SetRejectMessage("\nChỉ chọn được đường Polyline (LWPOLYLINE)!");
-
-                    peo.AddAllowedClass(typeof(Polyline), false);
-
-                    PromptEntityResult per = ed.GetEntity(peo);
-
-                    if (per.Status != PromptStatus.OK) return;
-
-
-
-                    bool ok = HvacService.RouteDuctAlongPolyline(doc, per.ObjectId, p);
-
-                    if (ok && txtStatus != null)
-
-                    {
-
-                        txtStatus.Text = string.Format("✓ Đã vẽ tuyến ống gió ({0}, Q={1:F0} CMH) tự động theo Polyline!", sysLayer, q0);
-
-                    }
-
-                }
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi vẽ ống gió: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void TxtRefCoolingKw_TextChanged(object sender, TextChangedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                if (txtRefCoolingKw == null || txtResRefnetModel == null) return;
-
-                double kw = 28.0;
-
-                double.TryParse(txtRefCoolingKw.Text, out kw);
-
-                if (kw <= 0) kw = 28.0;
-
-
-
-                DaikinRefnetSpec spec = HvacService.GetDaikinRefnetByCapacity(kw);
-
-                txtResRefnetModel.Text = string.Format("DAIKIN {0} (<={1:F0} kW)", spec.ModelName.Replace("Bo_Chia_Gas_Daikin_", ""), spec.MaxKw);
-
-                if (txtResGasPipe != null) txtResGasPipe.Text = string.Format("Gas: {0} (MEP_HVAC_ONG_DONG_GAS)", spec.GasPipeStr);
-
-                if (txtResLiqPipe != null) txtResLiqPipe.Text = string.Format("Liq: {0} (MEP_HVAC_ONG_DONG_LONG)", spec.LiqPipeStr);
-
-            }
-
-            catch { }
-
-        }
-
-
-
-        private void BtnRouteRefrigerantAlongPl_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null)
-
-                {
-
-                    if (txtStatus != null) txtStatus.Text = "Không có bản vẽ nào đang mở!";
-
-                    return;
-
-                }
-
-
-
-                double kw = 28.0, spacing = 60.0;
-
-                double.TryParse(txtRefCoolingKw != null ? txtRefCoolingKw.Text : "28.0", out kw);
-
-                double.TryParse(txtRefPipeSpacing != null ? txtRefPipeSpacing.Text : "60", out spacing);
-
-
-
-                RefrigerantRoutingParams p = new RefrigerantRoutingParams
-
-                {
-
-                    TotalCoolingKw = kw,
-
-                    PipeSpacingMm = spacing,
-
-                    InsertRefnetJoints = chkInsertRefnetJoints == null || chkInsertRefnetJoints.IsChecked == true,
-
-                    DrawCombinedDrain = chkRefCombinedDrain != null && chkRefCombinedDrain.IsChecked == true,
-
-                    DrainSlopePercent = 1.0,
-
-                    AddAnnotations = chkRefAnnotations == null || chkRefAnnotations.IsChecked == true
-
-                };
-
-
-
-                Application.MainWindow.Focus();
-
-                using (DocumentLock docLock = doc.LockDocument())
-
-                {
-
-                    Editor ed = doc.Editor;
-
-                    PromptEntityOptions peo = new PromptEntityOptions("\n[ĐHKK] Chọn đường Polyline (PL) định tuyến Cụm Ống Đồng & Bộ Chia Daikin: ");
-
-                    peo.SetRejectMessage("\nChỉ chọn được đường Polyline (LWPOLYLINE)!");
-
-                    peo.AddAllowedClass(typeof(Polyline), false);
-
-                    PromptEntityResult per = ed.GetEntity(peo);
-
-                    if (per.Status != PromptStatus.OK) return;
-
-
-
-                    bool ok = HvacService.RouteRefrigerantAlongPolyline(doc, per.ObjectId, p);
-
-                    if (ok && txtStatus != null)
-
-                    {
-
-                        DaikinRefnetSpec spec = HvacService.GetDaikinRefnetByCapacity(kw);
-
-                        txtStatus.Text = string.Format("✓ Đã vẽ Cụm Ống Đồng (Gas {0} / Liq {1}) & Bộ chia Daikin {2}!",
-
-                            spec.GasPipeStr, spec.LiqPipeStr, spec.ModelName);
-
-                    }
-
-                }
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi vẽ ống đồng: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void BtnRouteDrainAlongPl_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null)
-
-                {
-
-                    if (txtStatus != null) txtStatus.Text = "Không có bản vẽ nào đang mở!";
-
-                    return;
-
-                }
-
-
-
-                double slope = 1.0, startElev = 2.8, kw = 10.0;
-
-                if (cbDrainSlope != null)
-
-                {
-
-                    switch (cbDrainSlope.SelectedIndex)
-
-                    {
-
-                        case 0: slope = 1.0; break;
-
-                        case 1: slope = 1.5; break;
-
-                        case 2: slope = 2.0; break;
-
-                    }
-
-                }
-
-                double.TryParse(txtDrainStartElev != null ? txtDrainStartElev.Text : "2.8", out startElev);
-
-
-
-                if (cbDrainPipeDia != null)
-
-                {
-
-                    switch (cbDrainPipeDia.SelectedIndex)
-
-                    {
-
-                        case 0: kw = 4.0; break;  // D27
-
-                        case 1: kw = 12.0; break; // D34
-
-                        case 2: kw = 25.0; break; // D42
-
-                        case 3: kw = 40.0; break; // D49
-
-                    }
-
-                }
-
-
-
-                DrainRoutingParams p = new DrainRoutingParams
-
-                {
-
-                    TotalCoolingKw = kw,
-
-                    SlopePercent = slope,
-
-                    StartElevationM = startElev,
-
-                    AddSlopeArrow = chkDrainSlopeArrow == null || chkDrainSlopeArrow.IsChecked == true,
-
-                    AddAnnotations = true
-
-                };
-
-
-
-                Application.MainWindow.Focus();
-
-                using (DocumentLock docLock = doc.LockDocument())
-
-                {
-
-                    Editor ed = doc.Editor;
-
-                    PromptEntityOptions peo = new PromptEntityOptions("\n[ĐHKK] Chọn đường Polyline (PL) định tuyến Ống Nước Ngưng: ");
-
-                    peo.SetRejectMessage("\nChỉ chọn được đường Polyline (LWPOLYLINE)!");
-
-                    peo.AddAllowedClass(typeof(Polyline), false);
-
-                    PromptEntityResult per = ed.GetEntity(peo);
-
-                    if (per.Status != PromptStatus.OK) return;
-
-
-
-                    bool ok = HvacService.RouteCondensateDrainAlongPolyline(doc, per.ObjectId, p);
-
-                    if (ok && txtStatus != null)
-
-                    {
-
-                        txtStatus.Text = string.Format("✓ Đã vẽ tuyến Ống Nước Ngưng (độ dốc i={0:F1}%, cao độ +{1:F2}m)!", slope, startElev);
-
-                    }
-
-                }
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi vẽ ống nước ngưng: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-private void BtnInsertHvacBlock_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null)
-
-                {
-
-                    if (txtStatus != null) txtStatus.Text = "Không có bản vẽ nào đang mở!";
-
-                    return;
-
-                }
-
-
-
-                string blkName = "Mieng_Gio_Khuech_Tan_Vuong";
-
-                string dwgFile = "Mieng_Gio_Khuech_Tan_Vuong.dwg";
-
-
-
-                int selIndex = cbHvacCatalog != null ? cbHvacCatalog.SelectedIndex : 0;
-
-                List<HvacBlockItem> catalog = HvacService.GetCatalog();
-
-                if (selIndex >= 0 && selIndex < catalog.Count)
-
-                {
-
-                    blkName = Path.GetFileNameWithoutExtension(catalog[selIndex].FileName);
-
-                    dwgFile = catalog[selIndex].FileName;
-
-                }
-
-
-
-                Application.MainWindow.Focus();
-
-                HvacService.InsertSingleBlockWithPrompt(doc, blkName, dwgFile);
-
-                if (txtStatus != null) txtStatus.Text = string.Format("✓ Đã chèn {0} vào bản vẽ thành công!", blkName);
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi chèn block: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private HvacDuctCalcInput GetDuctInputFromUi()
-
-        {
-
-            double q = 1200.0, v = 5.5, h = 250.0, l = 15.0;
-
-            double.TryParse(txtDuctFlowCmh != null ? txtDuctFlowCmh.Text : "1200", out q);
-
-            double.TryParse(txtDuctVelocity != null ? txtDuctVelocity.Text : "5.5", out v);
-
-            double.TryParse(txtDuctHeight != null ? txtDuctHeight.Text : "250", out h);
-
-            double.TryParse(txtDuctLength != null ? txtDuctLength.Text : "15.0", out l);
-
-
-
-            return new HvacDuctCalcInput
-
-            {
-
-                AirFlowCmh = q,
-
-                VelocityMs = v,
-
-                DuctHeightMm = h,
-
-                DuctLengthM = l,
-
-                DuctType = "Vuông"
-
-            };
-
-        }
-
-
-
-        private void BtnCalcDuctSize_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                HvacDuctCalcInput inp = GetDuctInputFromUi();
-
-                HvacDuctCalcResult res = HvacService.CalculateDuctSize(inp);
-
-
-
-                if (txtResDuctRect != null) txtResDuctRect.Text = string.Format("{0:F0} x {1:F0} mm (W/H={2:F1})", res.RectWidthMm, res.RectHeightMm, res.RectAspectRatio);
-
-                if (txtResDuctRound != null) txtResDuctRound.Text = string.Format("Ø{0:F0} mm (Tính toán: Ø{1:F0} mm)", res.RoundStandardMm, res.RoundDiameterMm);
-
-                if (txtResDuctLoss != null) txtResDuctLoss.Text = string.Format("v = {0:F2} m/s | {1:F2} Pa/m ({2:F1} Pa)", res.ActualVelocityMs, res.UnitFrictionLossPam, res.TotalFrictionLossPa);
-
-                if (txtResDuctWeight != null) txtResDuctWeight.Text = string.Format("Tôn {0:F2}mm | {1:F1} m² (~{2:F1} kg)", res.SheetThicknessMm, res.SheetMetalAreaM2, res.SheetMetalWeightKg);
-
-
-
-                if (txtStatus != null) txtStatus.Text = string.Format("✓ Đã tính xong ống gió: {0:F0}x{1:F0}mm, V={2:F2}m/s, Tôn {3:F1}kg", res.RectWidthMm, res.RectHeightMm, res.ActualVelocityMs, res.SheetMetalWeightKg);
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi tính ống gió: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void BtnDrawDuctTable_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null)
-
-                {
-
-                    if (txtStatus != null) txtStatus.Text = "Không có bản vẽ nào đang mở!";
-
-                    return;
-
-                }
-
-
-
-                HvacDuctCalcInput inp = GetDuctInputFromUi();
-
-                HvacDuctCalcResult res = HvacService.CalculateDuctSize(inp);
-
-
-
-                Application.MainWindow.Focus();
-
-                HvacService.DrawDuctSizingTableInCad(doc, res, inp);
-
-
-
-                if (txtStatus != null) txtStatus.Text = "✓ Đã vẽ Bảng Tính Kích Thước Ống Gió vào CAD thành công!";
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi vẽ bảng: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void CbCoolingSpaceType_SelectionChanged(object sender, SelectionChangedEventArgs e)
-
-        {
-
-            if (cbCoolingSpaceType == null || txtCoolingSpecificLoad == null) return;
-
-            switch (cbCoolingSpaceType.SelectedIndex)
-
-            {
-
-                case 0: txtCoolingSpecificLoad.Text = "200"; break; // Văn phòng
-
-                case 1: txtCoolingSpecificLoad.Text = "160"; break; // Phòng ngủ / KS
-
-                case 2: txtCoolingSpecificLoad.Text = "220"; break; // Phòng khách / Biệt thự
-
-                case 3: txtCoolingSpecificLoad.Text = "250"; break; // TTTM
-
-                case 4: txtCoolingSpecificLoad.Text = "320"; break; // Nhà hàng / Bếp
-
-            }
-
-        }
-
-
-
-        private HvacCoolingCalcInput GetCoolingInputFromUi()
-
-        {
-
-            double area = 45.0, ceilingH = 3.2, specificLoad = 200.0, margin = 10.0;
-
-            double.TryParse(txtCoolingArea != null ? txtCoolingArea.Text : "45.0", out area);
-
-            double.TryParse(txtCoolingCeilingH != null ? txtCoolingCeilingH.Text : "3.2", out ceilingH);
-
-            double.TryParse(txtCoolingSpecificLoad != null ? txtCoolingSpecificLoad.Text : "200", out specificLoad);
-
-            double.TryParse(txtCoolingMargin != null ? txtCoolingMargin.Text : "10", out margin);
-
-
-
-            string spaceType = "Văn phòng làm việc";
-
-            if (cbCoolingSpaceType != null)
-
-            {
-
-                ComboBoxItem item = cbCoolingSpaceType.SelectedItem as ComboBoxItem;
-
-                if (item != null && item.Content != null) spaceType = item.Content.ToString();
-
-            }
-
-
-
-            return new HvacCoolingCalcInput
-
-            {
-
-                SpaceType = spaceType,
-
-                RoomAreaM2 = area,
-
-                CeilingHeightM = ceilingH,
-
-                CoolingIndexWPerM2 = specificLoad,
-
-                SafetyMarginPercent = margin
-
-            };
-
-        }
-
-
-
-        private void BtnCalcCooling_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                HvacCoolingCalcInput inp = GetCoolingInputFromUi();
-
-                HvacCoolingCalcResult res = HvacService.CalculateCoolingLoad(inp);
-
-
-
-                if (txtResCoolingLoad != null) txtResCoolingLoad.Text = string.Format("{0:F2} kW (~{1:F0} BTU/h - {2:F1} RT)", res.TotalLoadKw, res.TotalLoadBtu, res.TotalLoadRt);
-
-                if (txtResFcuModel != null) txtResFcuModel.Text = res.SuggestedFcuModel;
-
-                if (txtResVrvOutdoor != null) txtResVrvOutdoor.Text = res.SuggestedVrvOutdoor;
-
-
-
-                if (txtStatus != null) txtStatus.Text = string.Format("✓ Đã tính phụ tải lạnh: {0:F1} kW ({1:F0} BTU/h) cho diện tích {2:F1} m²", res.TotalLoadKw, res.TotalLoadBtu, res.RoomAreaM2);
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi tính phụ tải: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void BtnDrawCoolingTable_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null)
-
-                {
-
-                    if (txtStatus != null) txtStatus.Text = "Không có bản vẽ nào đang mở!";
-
-                    return;
-
-                }
-
-
-
-                HvacCoolingCalcInput inp = GetCoolingInputFromUi();
-
-                HvacCoolingCalcResult res = HvacService.CalculateCoolingLoad(inp);
-
-
-
-                Application.MainWindow.Focus();
-
-                HvacService.DrawCoolingLoadTableInCad(doc, res, inp);
-
-
-
-                if (txtStatus != null) txtStatus.Text = "✓ Đã vẽ Bảng Tính Chọn FCU & VRV vào CAD thành công!";
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi vẽ bảng: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void BtnQuickPlaceDiffuser_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlaceQuickHvacDevice("Mieng_Gio_Khuech_Tan_Vuong", "Mieng_Gio_Khuech_Tan_Vuong.dwg");
-
-        }
-
-
-
-        private void BtnQuickPlaceFcu_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlaceQuickHvacDevice("Dan_Lanh_FCU_Giau_Tran", "Dan_Lanh_FCU_Giau_Tran.dwg");
-
-        }
-
-
-
-        private void BtnQuickPlaceVcd_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlaceQuickHvacDevice("Van_Gio_Vuong_VCD", "Van_Gio_Vuong_VCD.dwg");
-
-        }
-
-
-
-        private void BtnQuickPlaceFireDamper_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlaceQuickHvacDevice("Van_Dap_Lua_FD", "Van_Dap_Lua_FD.dwg");
-
-        }
-
-
-
-        private void PlaceQuickHvacDevice(string blkName, string dwgFile)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null) return;
-
-                Application.MainWindow.Focus();
-
-                HvacService.InsertSingleBlockWithPrompt(doc, blkName, dwgFile);
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Đã bố trí {0} thành công!", blkName);
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi bố trí: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        #endregion
-
-
-
-        #region Nghiệp Vụ Phân Hệ Cấp Thoát Nước (Plumbing & Xử Lý Nước)
-
-
-
-        private void BtnOpenPlumbingFolder_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlumbingService.OpenLibraryFolder();
-
-        }
-
-
-
-        private void BtnReloadPlumbingCatalog_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                if (txtPlumbingLibPath != null) txtPlumbingLibPath.Text = PlumbingService.GetPrimaryLibraryPath();
-
-                if (txtStatus != null) txtStatus.Text = "Đã cập nhật lại thư mục Block CTN!";
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void BtnInsertPlumbingBlock_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null)
-
-                {
-
-                    if (txtStatus != null) txtStatus.Text = "Không có bản vẽ nào đang mở!";
-
-                    return;
-
-                }
-
-
-
-                string blkName = "Ban_Cau_Ket_Hop";
-
-                string dwgFile = "Ban_Cau_Ket_Hop.dwg";
-
-
-
-                int selIndex = cbPlumbingCatalog != null ? cbPlumbingCatalog.SelectedIndex : 0;
-
-                List<PlumbingBlockItem> catalog = PlumbingService.GetCatalog();
-
-                if (selIndex >= 0 && selIndex < catalog.Count)
-
-                {
-
-                    blkName = Path.GetFileNameWithoutExtension(catalog[selIndex].FileName);
-
-                    dwgFile = catalog[selIndex].FileName;
-
-                }
-
-
-
-                Application.MainWindow.Focus();
-
-                PlumbingService.InsertSingleBlockWithPrompt(doc, blkName, dwgFile);
-
-                if (txtStatus != null) txtStatus.Text = string.Format("✓ Đã chèn {0} vào bản vẽ thành công!", blkName);
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi chèn block: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private PlumbingWaterSupplyInput GetWaterSupplyInputFromUi()
-
-        {
-
-            int wc = 6, lav = 6, sink = 2, shower = 4, urinal = 2, wm = 2, residents = 25;
-
-            double floors = 5.0;
-
-
-
-            int.TryParse(txtWsfuWc != null ? txtWsfuWc.Text : "6", out wc);
-
-            int.TryParse(txtWsfuLav != null ? txtWsfuLav.Text : "6", out lav);
-
-            int.TryParse(txtWsfuSink != null ? txtWsfuSink.Text : "2", out sink);
-
-            int.TryParse(txtWsfuShower != null ? txtWsfuShower.Text : "4", out shower);
-
-            int.TryParse(txtWsfuUrinal != null ? txtWsfuUrinal.Text : "2", out urinal);
-
-            int.TryParse(txtWsfuWm != null ? txtWsfuWm.Text : "2", out wm);
-
-            int.TryParse(txtWsfuResidents != null ? txtWsfuResidents.Text : "25", out residents);
-
-            double.TryParse(txtWsfuFloors != null ? txtWsfuFloors.Text : "5", out floors);
-
-
-
-            string bldType = "Nhà ở gia đình";
-
-            if (cbPlumbingBuildingType != null)
-
-            {
-
-                ComboBoxItem item = cbPlumbingBuildingType.SelectedItem as ComboBoxItem;
-
-                if (item != null && item.Content != null) bldType = item.Content.ToString();
-
-            }
-
-
-
-            return new PlumbingWaterSupplyInput
-
-            {
-
-                BuildingType = bldType,
-
-                CountWc = wc,
-
-                CountLavabo = lav,
-
-                CountKitchenSink = sink,
-
-                CountShower = shower,
-
-                CountUrinal = urinal,
-
-                CountWashingMachine = wm,
-
-                ResidentCount = residents,
-
-                FloorCount = floors
-
-            };
-
-        }
-
-
-
-        private void BtnCalcWaterSupply_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                PlumbingWaterSupplyInput inp = GetWaterSupplyInputFromUi();
-
-                PlumbingWaterSupplyResult res = PlumbingService.CalculateWaterSupply(inp);
-
-
-
-                if (txtResSupplyFlow != null) txtResSupplyFlow.Text = string.Format("{0:F1} WSFU | {1:F2} l/s ({2:F1} m³/h)", res.TotalWsfu, res.DesignFlowLs, res.DesignFlowM3h);
-
-                if (txtResSupplyPipe != null) txtResSupplyPipe.Text = string.Format("{0} (v = {1:F2} m/s)", res.SuggestedPipeName, res.VelocityMs);
-
-                if (txtResSupplyTanks != null) txtResSupplyTanks.Text = string.Format("{0:F1} m³/ngày | Bể ngầm {1:F1} m³ - Mái {2:F1} m³", res.DailyDemandM3, res.UndergroundTankM3, res.RoofTankM3);
-
-                if (txtResBooster != null) txtResBooster.Text = string.Format("Cột áp H = {0:F1} m | Công suất P = {1:F1} kW", res.BoosterHeadM, res.BoosterPowerKw);
-
-
-
-                if (txtStatus != null) txtStatus.Text = string.Format("✓ Đã tính xong nước cấp: {0:F1} WSFU, Q={1:F2} l/s, Ống {2}", res.TotalWsfu, res.DesignFlowLs, res.SuggestedPipeName);
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi tính nước cấp: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void BtnDrawWaterSupplyTable_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null)
-
-                {
-
-                    if (txtStatus != null) txtStatus.Text = "Không có bản vẽ nào đang mở!";
-
-                    return;
-
-                }
-
-
-
-                PlumbingWaterSupplyInput inp = GetWaterSupplyInputFromUi();
-
-                PlumbingWaterSupplyResult res = PlumbingService.CalculateWaterSupply(inp);
-
-
-
-                Application.MainWindow.Focus();
-
-                PlumbingService.DrawWaterSupplyTableInCad(doc, res, inp);
-
-
-
-                if (txtStatus != null) txtStatus.Text = "✓ Đã vẽ Bảng Tính Nước Cấp & Bể Chứa vào CAD thành công!";
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi vẽ bảng: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private PlumbingDrainageInput GetDrainageInputFromUi()
-
-        {
-
-            int wc = 6, lav = 6, sink = 2, fd = 6, shower = 4, residents = 25;
-
-            double slope = 2.0;
-
-
-
-            int.TryParse(txtDfuWc != null ? txtDfuWc.Text : "6", out wc);
-
-            int.TryParse(txtDfuLav != null ? txtDfuLav.Text : "6", out lav);
-
-            int.TryParse(txtDfuSink != null ? txtDfuSink.Text : "2", out sink);
-
-            int.TryParse(txtDfuFd != null ? txtDfuFd.Text : "6", out fd);
-
-            int.TryParse(txtDfuShower != null ? txtDfuShower.Text : "4", out shower);
-
-            double.TryParse(txtDfuSlope != null ? txtDfuSlope.Text : "2.0", out slope);
-
-            int.TryParse(txtWsfuResidents != null ? txtWsfuResidents.Text : "25", out residents);
-
-
-
-            return new PlumbingDrainageInput
-
-            {
-
-                CountWc = wc,
-
-                CountLavabo = lav,
-
-                CountKitchenSink = sink,
-
-                CountFloorDrain = fd,
-
-                CountShower = shower,
-
-                DesignSlopePercent = slope,
-
-                ResidentCount = residents
-
-            };
-
-        }
-
-
-
-        private void BtnCalcDrainage_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                PlumbingDrainageInput inp = GetDrainageInputFromUi();
-
-                PlumbingDrainageResult res = PlumbingService.CalculateDrainage(inp);
-
-
-
-                if (txtResDfuTotal != null) txtResDfuTotal.Text = string.Format("{0:F1} DFU", res.TotalDfu);
-
-                if (txtResSoilStack != null) txtResSoilStack.Text = string.Format("Phân {0} | Thải {1}", res.SoilStackDia, res.WasteStackDia);
-
-                if (txtResDrainBranch != null) txtResDrainBranch.Text = string.Format("Nhánh {0} (i={1:F1}%) | Hơi {2}", res.HorizontalBranchDia, res.RecommendedSlopePercent, res.MainVentDia);
-
-                if (txtResSepticTank != null) txtResSepticTank.Text = string.Format("V = {0:F1} m³ ({1})", res.SepticTankVolumeM3, res.SepticTankDimensions);
-
-
-
-                if (txtStatus != null) txtStatus.Text = string.Format("✓ Đã tính xong thoát nước: {0:F1} DFU, Bể tự hoại {1:F1} m³", res.TotalDfu, res.SepticTankVolumeM3);
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi tính thoát nước: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void BtnDrawDrainageTable_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null)
-
-                {
-
-                    if (txtStatus != null) txtStatus.Text = "Không có bản vẽ nào đang mở!";
-
-                    return;
-
-                }
-
-
-
-                PlumbingDrainageInput inp = GetDrainageInputFromUi();
-
-                PlumbingDrainageResult res = PlumbingService.CalculateDrainage(inp);
-
-
-
-                Application.MainWindow.Focus();
-
-                PlumbingService.DrawDrainageTableInCad(doc, res, inp);
-
-
-
-                if (txtStatus != null) txtStatus.Text = "✓ Đã vẽ Bảng Chọn Cỡ Ống Thoát Nước vào CAD thành công!";
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi vẽ bảng: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        private void BtnQuickPlaceToilet_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlaceQuickPlumbingDevice("Ban_Cau_Ket_Hop", "Ban_Cau_Ket_Hop.dwg");
-
-        }
-
-
-
-        private void BtnQuickPlaceLavabo_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlaceQuickPlumbingDevice("Chau_Rua_Lavabo", "Chau_Rua_Lavabo.dwg");
-
-        }
-
-
-
-        private void BtnQuickPlaceFloorDrain_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlaceQuickPlumbingDevice("Pheu_Thu_San_FloorDrain", "Pheu_Thu_San_FloorDrain.dwg");
-
-        }
-
-
-
-        private void BtnQuickPlaceBoosterPump_Click(object sender, RoutedEventArgs e)
-
-        {
-
-            PlaceQuickPlumbingDevice("Cum_Bom_Cap_Nuoc_Booster", "Cum_Bom_Cap_Nuoc_Booster.dwg");
-
-        }
-
-
-
-        private void PlaceQuickPlumbingDevice(string blkName, string dwgFile)
-
-        {
-
-            try
-
-            {
-
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-
-                if (doc == null) return;
-
-                Application.MainWindow.Focus();
-
-                PlumbingService.InsertSingleBlockWithPrompt(doc, blkName, dwgFile);
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Đã bố trí {0} thành công!", blkName);
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                if (txtStatus != null) txtStatus.Text = string.Format("Lỗi bố trí: {0}", ex.Message);
-
-            }
-
-        }
-
-
-
-        #endregion
-
-
-
-
-
+        // [MODULE HÓA NHÁNH 1] Toàn bộ logic Thiết kế Tủ điện & Thang máng cáp (TMC) đã được tách sang file: Views/PaletteParts/TaiAiPaletteControl.Electrical.cs
+        // [MODULE HÓA NHÁNH 4] Toàn bộ logic Phân hệ Phòng cháy chữa cháy (PCCC) đã được tách sang file: Views/PaletteParts/TaiAiPaletteControl.FireProtection.cs
+        // [MODULE HÓA NHÁNH 2] Toàn bộ logic Phân hệ Điều hòa không khí (ĐHKK/HVAC) đã được tách sang file: Views/PaletteParts/TaiAiPaletteControl.Hvac.cs
+        // [MODULE HÓA NHÁNH 3] Toàn bộ logic Phân hệ Cấp thoát nước (Plumbing) đã được tách sang file: Views/PaletteParts/TaiAiPaletteControl.Plumbing.cs
 
         #region AI MCP REMOTE CONTROL LOGIC
 
@@ -3956,5 +1665,7 @@ private void BtnInsertHvacBlock_Click(object sender, RoutedEventArgs e)
         #endregion
 }
 
+        #endregion
+        #endregion
 }
 

@@ -213,15 +213,20 @@ namespace TaiAiAddin.Models
 
             {
 
+                if (Math.Abs(_powerKw - value) < 0.0001) return;
+
                 _powerKw = value;
 
                 OnPropertyChanged("PowerKW");
 
-                // Nếu là 3 pha và không có chỉnh tay lẻ, tự động chia đều 3 pha
+                double u = (_phase == PhaseType.ThreePhase) ? 380.0 : 220.0;
+                double cosPhi = 0.85;
 
                 if (_phase == PhaseType.ThreePhase)
 
                 {
+
+                    _currentA = (_powerKw * 1000.0) / (Math.Sqrt(3.0) * u * cosPhi);
 
                     double p3 = _powerKw / 3.0;
 
@@ -243,7 +248,7 @@ namespace TaiAiAddin.Models
 
                 {
 
-                    // 1 pha: gán vào pha đang chọn
+                    _currentA = (_powerKw * 1000.0) / (u * cosPhi);
 
                     if (_assignedPhase == "Y") { _powerY = _powerKw; _powerR = 0; _powerB = 0; }
 
@@ -259,6 +264,10 @@ namespace TaiAiAddin.Models
 
                 }
 
+                OnPropertyChanged("CurrentA");
+                _isBreakerUserDefined = false;
+                UpdateBreakerSpecFromType();
+
             }
 
         }
@@ -272,6 +281,8 @@ namespace TaiAiAddin.Models
             set
 
             {
+
+                if (_phase == value) return;
 
                 _phase = value;
 
@@ -546,10 +557,13 @@ namespace TaiAiAddin.Models
             }
             set
             {
-                _breakerType = value;
-                _isBreakerUserDefined = true;
-                OnPropertyChanged("BreakerType");
-                UpdateBreakerSpecFromType();
+                if (_breakerType != value)
+                {
+                    _breakerType = value;
+                    OnPropertyChanged("BreakerType");
+                    UpdateBreakerSpecFromType();
+                    UpdateCableSpec();
+                }
             }
         }
 
@@ -566,26 +580,25 @@ namespace TaiAiAddin.Models
             {
                 rating = forcedRating.Value;
             }
-            else if (CurrentA > 0.001)
+            else
             {
-                double target = CurrentA * 1.25;
-                int[] std = new int[] { 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250, 300, 350, 400, 500, 630 };
-                rating = std[std.Length - 1];
-                for (int i = 0; i < std.Length; i++)
+                double target = CurrentA > 0.001 ? CurrentA * 1.25 : (PowerKW > 0.001 ? (Phase == PhaseType.ThreePhase ? (PowerKW * 1000.0 / (Math.Sqrt(3.0) * 380.0 * 0.85)) * 1.25 : (PowerKW * 1000.0 / (220.0 * 0.85)) * 1.25) : 0);
+                if (target > 0.001)
                 {
-                    if (std[i] >= target) { rating = std[i]; break; }
+                    int[] std = new int[] { 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250, 300, 350, 400, 500, 630 };
+                    rating = std[std.Length - 1];
+                    for (int i = 0; i < std.Length; i++)
+                    {
+                        if (std[i] >= target) { rating = std[i]; break; }
+                    }
                 }
-            }
-            else if (!string.IsNullOrEmpty(_breakerSpec))
-            {
-                System.Text.RegularExpressions.Match m = System.Text.RegularExpressions.Regex.Match(_breakerSpec, @"(\d+)\s*A");
-                if (m.Success)
+                else
                 {
-                    int.TryParse(m.Groups[1].Value, out rating);
+                    rating = 16;
                 }
             }
 
-            if (rating <= 0) rating = (Phase == PhaseType.ThreePhase ? 40 : 16);
+            if (rating <= 0) rating = 16;
 
             string bType = BreakerType;
             string icu = "10kA";
@@ -626,8 +639,14 @@ namespace TaiAiAddin.Models
                     int rccb4Rating = rating <= 40 ? 40 : (rating <= 63 ? 63 : (rating <= 100 ? 100 : rating));
                     BreakerSpec = string.Format("RCCB 4P-30mA {0}A", rccb4Rating);
                     break;
+                case "RCBO 1P+N":
+                    BreakerSpec = string.Format("RCBO 1P+N-30mA {0}A", rating);
+                    break;
                 case "RCBO 2P":
                     BreakerSpec = string.Format("RCBO 2P-30mA {0}A", rating);
+                    break;
+                case "RCBO 3P+N":
+                    BreakerSpec = string.Format("RCBO 3P+N-30mA {0}A", rating);
                     break;
                 case "RCBO 4P":
                     BreakerSpec = string.Format("RCBO 4P-30mA {0}A", rating);
@@ -782,110 +801,102 @@ namespace TaiAiAddin.Models
             string cable;
 
             // Nếu là khởi động Sao - Tam giác (Y-Δ), cần 2 đường cáp 3 pha riêng biệt ra động cơ (2x3C)
-
             if (_starter == StarterType.StarDelta)
-
             {
-
                 cable = string.Format("2x({0} 3C-{1}mm2)", cType, size);
-
             }
-
-            else if (core == "4C")
-
+            else if (core == "1C" || core == "1c")
             {
-
-                cable = string.Format("{0} 4C-{1}mm2", cType, size);
-
-            }
-
-            else if (core == "3C")
-
-            {
-
-                cable = string.Format("{0} 3C-{1}mm2", cType, size);
-
-            }
-
-            else if (core == "2C")
-
-            {
-
-                cable = string.Format("{0} 2C-{1}mm2", cType, size);
-
-            }
-
-            else if (core == "1C")
-
-            {
-
-                cable = string.Format("{0} 1C-{1}mm2", cType, size);
-
-            }
-
-            else if (core == "4x1C" || string.Equals(core, "4x1c", StringComparison.OrdinalIgnoreCase))
-
-            {
-
-                cable = string.Format("4x{0} 1C-{1}mm2", cType, size);
-
-            }
-
-            else if (core == "3x1C" || string.Equals(core, "3x1c", StringComparison.OrdinalIgnoreCase))
-
-            {
-
-                cable = string.Format("3x{0} 1C-{1}mm2", cType, size);
-
-            }
-
-            else if (core == "2x1C" || string.Equals(core, "2x1c", StringComparison.OrdinalIgnoreCase))
-
-            {
-
-                cable = string.Format("2x{0} 1C-{1}mm2", cType, size);
-
-            }
-
-            else // "Auto"
-
-            {
-
+                // Quy chuẩn sợi cáp khi chọn 1C:
+                // - Tải 3P Động cơ: 3x1C...+E...
+                // - Tải 3P Ngoài động cơ: 4x1C...+E...
+                // - Tải 1P: 2x1C...+E...
                 if (_phase == PhaseType.ThreePhase)
-
                 {
+                    bool isMotor = !string.IsNullOrEmpty(_loadType) &&
+                        (_loadType.Contains("Động cơ") || _loadType.Contains("DONG CO") || _loadType.Contains("Motor") || _loadType == "Power");
+                    if (isMotor)
+                    {
+                        cable = string.Format("3x({0} 1C-{1}mm2) + (1x{2}mm2)E", cType, size, gSize);
+                    }
+                    else
+                    {
+                        cable = string.Format("4x({0} 1C-{1}mm2) + (1x{2}mm2)E", cType, size, gSize);
+                    }
+                }
+                else
+                {
+                    cable = string.Format("2x({0} 1C-{1}mm2) + (1x{2}mm2)E", cType, size, gSize);
+                }
+                _groundWireSpec = "";
+            }
+            else if (core == "4C")
+            {
+                cable = string.Format("{0} 4C-{1}mm2", cType, size);
+            }
+            else if (core == "3C")
+            {
+                cable = string.Format("{0} 3C-{1}mm2", cType, size);
+            }
+            else if (core == "2C")
+            {
+                cable = string.Format("{0} 2C-{1}mm2", cType, size);
+            }
+            else if (core == "4x1C" || string.Equals(core, "4x1c", StringComparison.OrdinalIgnoreCase))
+            {
+                cable = string.Format("4x({0} 1C-{1}mm2) + (1x{2}mm2)E", cType, size, gSize);
+                _groundWireSpec = "";
+            }
+            else if (core == "3x1C" || string.Equals(core, "3x1c", StringComparison.OrdinalIgnoreCase))
+            {
+                cable = string.Format("3x({0} 1C-{1}mm2) + (1x{2}mm2)E", cType, size, gSize);
+                _groundWireSpec = "";
+            }
+            else if (core == "2x1C" || string.Equals(core, "2x1c", StringComparison.OrdinalIgnoreCase))
+            {
+                cable = string.Format("2x({0} 1C-{1}mm2) + (1x{2}mm2)E", cType, size, gSize);
+                _groundWireSpec = "";
+            }
+            else // "Auto" - Tự động phân theo loại hình aptomat tương ứng
+            {
+                if (_phase == PhaseType.ThreePhase)
+                {
+                    string bType = !string.IsNullOrEmpty(_breakerType) ? _breakerType.ToUpperInvariant() : "";
+                    bool isMotor = !string.IsNullOrEmpty(_loadType) &&
+                        (_loadType.Contains("Động cơ") || _loadType.Contains("DONG CO") || _loadType.Contains("Motor") || _loadType == "Power");
 
                     if (sVal >= 50.0)
-
                     {
-
-                        cable = string.Format("4x{0} 1C-{1}mm2", cType, size);
-
+                        if (isMotor && !bType.Contains("4P"))
+                            cable = string.Format("3x({0} 1C-{1}mm2) + (1x{2}mm2)E", cType, size, gSize);
+                        else
+                            cable = string.Format("4x({0} 1C-{1}mm2) + (1x{2}mm2)E", cType, size, gSize);
+                        _groundWireSpec = "";
                     }
-
                     else
-
                     {
-
-                        cable = string.Format("{0} 4C-{1}mm2", cType, size);
-
+                        if (isMotor && (bType.Contains("3P") || string.IsNullOrEmpty(bType)))
+                            cable = string.Format("{0} 3C-{1}mm2", cType, size);
+                        else
+                            cable = string.Format("{0} 4C-{1}mm2", cType, size);
                     }
-
                 }
-
                 else
-
                 {
-
                     cable = string.Format("{0} 2C-{1}mm2", cType, size);
-
                 }
-
             }
 
             _cableSpec = cable;
 
-            _groundWireSpec = string.Format("(E) Cu/PVC 1C-{0}mm2", gSize);
+            if (core == "1C" || core == "1c" || core == "4x1C" || core == "3x1C" || core == "2x1C" || (sVal >= 50.0 && core == "Auto") || cable.Contains(")E"))
+            {
+                _groundWireSpec = "";
+            }
+            else
+            {
+                _groundWireSpec = string.Format("(E) Cu/PVC 1C-{0}mm2", gSize);
+            }
 
             OnPropertyChanged("CableSpec");
 
@@ -927,7 +938,17 @@ namespace TaiAiAddin.Models
 
             {
 
-                if (!string.IsNullOrEmpty(GroundWireSpec) && !string.IsNullOrEmpty(CableSpec) && !CableSpec.Contains("(E)"))
+                if (string.IsNullOrEmpty(CableSpec)) return "";
+
+                if (!string.IsNullOrEmpty(GroundWireSpec) 
+                    && !CableSpec.Contains("(E)") 
+                    && !CableSpec.Contains(")E") 
+                    && !CableSpec.Contains("+ E")
+                    && !CableSpec.Contains("+ (1x")
+                    && !CableSpec.Contains("+ (1")
+                    && !CableSpec.Contains("+ (E")
+                    && !CableSpec.Contains("+ ")
+                    && !CableSpec.Contains(GroundWireSpec))
 
                 {
 
@@ -1340,6 +1361,24 @@ namespace TaiAiAddin.Models
                             Control = ControlMode.AutoManual;
                         }
                     }
+                    else if (mapped == "Ổ cắm")
+                    {
+                        Starter = StarterType.Direct;
+                        Control = ControlMode.None;
+                        if (_phase == PhaseType.ThreePhase)
+                        {
+                            BreakerType = "RCBO 4P";
+                            double inA = Math.Max(20, Math.Ceiling(CurrentA * 1.25));
+                            BreakerSpec = string.Format("RCBO 4P-30mA {0}A 10kA", inA);
+                        }
+                        else
+                        {
+                            BreakerType = "RCBO 2P";
+                            double inA = Math.Max(16, Math.Ceiling(CurrentA * 1.25));
+                            if (inA < 20 && _powerKw >= 2.0) inA = 20;
+                            BreakerSpec = string.Format("RCBO 2P-30mA {0}A 6kA", inA);
+                        }
+                    }
                     else
                     {
                         Starter = StarterType.Direct;
@@ -1468,11 +1507,28 @@ namespace TaiAiAddin.Models
 
     /// </summary>
 
-    public class ElectricalPanel
+    public class ElectricalPanel : INotifyPropertyChanged
 
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged(string propName)
+        {
+            if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(propName));
+        }
 
-        public string PanelName { get; set; }
+        private string _panelName;
+        public string PanelName
+        {
+            get { return _panelName; }
+            set
+            {
+                if (_panelName != value)
+                {
+                    _panelName = value;
+                    OnPropertyChanged("PanelName");
+                }
+            }
+        }
 
         public override string ToString()
         {

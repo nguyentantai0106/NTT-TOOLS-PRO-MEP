@@ -22,11 +22,13 @@
 
 (defun Get-SmartEnginePath ()
   (cond
-    ((findfile "d:/01. NGUYEN TAN TAI/CODING AI/SKILL XU LY MAT BANG/skills/smart-room-boundary/scripts/boundary_engine.py")
-     "d:/01. NGUYEN TAN TAI/CODING AI/SKILL XU LY MAT BANG/skills/smart-room-boundary/scripts/boundary_engine.py")
-    ((findfile "d:/01. NGUYEN TAN TAI/CODING AI/00.BAI 1_TOOLS/TaiAiAddin/Scripts/boundary_engine.py")
-     "d:/01. NGUYEN TAN TAI/CODING AI/00.BAI 1_TOOLS/TaiAiAddin/Scripts/boundary_engine.py")
-    (T "d:/01. NGUYEN TAN TAI/CODING AI/SKILL XU LY MAT BANG/skills/smart-room-boundary/scripts/boundary_engine.py")
+    ((findfile "D:/01. NGUYEN TAN TAI/CODING AI/00.BAI 1_TOOLS/TaiAiAddin/Scripts/boundary_engine.py")
+     "D:/01. NGUYEN TAN TAI/CODING AI/00.BAI 1_TOOLS/TaiAiAddin/Scripts/boundary_engine.py")
+    ((findfile (strcat (vl-string-translate "\\" "/" (getenv "APPDATA")) "/Autodesk/ApplicationPlugins/TaiAiAddin.bundle/Contents/Scripts/boundary_engine.py"))
+     (strcat (vl-string-translate "\\" "/" (getenv "APPDATA")) "/Autodesk/ApplicationPlugins/TaiAiAddin.bundle/Contents/Scripts/boundary_engine.py"))
+    ((findfile "D:/01. NGUYEN TAN TAI/CODING AI/SKILL XU LY MAT BANG/skills/smart-room-boundary/scripts/boundary_engine.py")
+     "D:/01. NGUYEN TAN TAI/CODING AI/SKILL XU LY MAT BANG/skills/smart-room-boundary/scripts/boundary_engine.py")
+    (T "D:/01. NGUYEN TAN TAI/CODING AI/00.BAI 1_TOOLS/TaiAiAddin/Scripts/boundary_engine.py")
   )
 )
 
@@ -109,9 +111,9 @@
   (setq pyCmd (strcat "\"" pyExe "\" \"" pyEngine "\" --dxf \"" dxfPath "\" --out \"" outLsp "\"" bboxStr))
   (startapp pyCmd)
 
-  ;; Vòng lặp chờ kết quả xử lý (tối đa 15 giây)
+  ;; Vòng lặp chờ kết quả xử lý (tối đa 45 giây)
   (setq timer 0)
-  (while (and (not (findfile outLsp)) (< timer 150))
+  (while (and (not (findfile outLsp)) (< timer 450))
     (Smart-Sleep 100)
     (setq timer (1+ timer))
   )

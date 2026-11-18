@@ -1,0 +1,1147 @@
+﻿<Window x:Class="TaiAiAddin.Views.CadLayoutProcessorDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="NTT TOOLS - TIỀN XỬ LÝ &amp; CHUẨN HÓA MẶT BẰNG KIẾN TRÚC AI"
+        Height="720" Width="1080" MinHeight="600" MinWidth="850"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        FontFamily="Segoe UI Variable Display, Inter, Roboto, Segoe UI, sans-serif" FontSize="12"
+        Background="#12161F" Foreground="#F8FAFC">
+
+    <Window.Resources>
+        <!-- Dark Mode Color Palette (WCAG AAA) -->
+        <SolidColorBrush x:Key="BgPrimary" Color="#12161F"/>
+        <SolidColorBrush x:Key="BgSurface" Color="#1E2433"/>
+        <SolidColorBrush x:Key="BgSubCard" Color="#161B26"/>
+        <SolidColorBrush x:Key="BgHover" Color="#2A3246"/>
+        <SolidColorBrush x:Key="BorderDivider" Color="#333D54"/>
+        <SolidColorBrush x:Key="AccentCyan" Color="#00E5FF"/>
+        <SolidColorBrush x:Key="AccentAmber" Color="#FF9100"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#F8FAFC"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#94A3B8"/>
+        <SolidColorBrush x:Key="StatusSuccess" Color="#00E676"/>
+        <SolidColorBrush x:Key="StatusWarning" Color="#FFD600"/>
+        <SolidColorBrush x:Key="StatusDanger" Color="#FF5252"/>
+
+        <!-- Style Card -->
+        <Style x:Key="DialogCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="#1E2433" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+            <Setter Property="BorderBrush" Value="#333D54" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <!-- Style Primary Button -->
+        <Style x:Key="PrimaryCyanBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#00E5FF" />
+            <Setter Property="Foreground" Value="#12161F" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#33EBFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Style Dark Button -->
+        <Style x:Key="DarkBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#161B26" />
+            <Setter Property="Foreground" Value="#F8FAFC" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="BorderBrush" Value="#333D54" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2A3246" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="#00E5FF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Style Amber Button -->
+        <Style x:Key="AmberBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#FF9100" />
+            <Setter Property="Foreground" Value="#12161F" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FFA726" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Dark Mode High-Contrast ComboBox Styles (WCAG AAA) -->
+        <ControlTemplate x:Key="DarkComboBoxToggleButton" TargetType="ToggleButton">
+            <Grid HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="22" />
+                </Grid.ColumnDefinitions>
+                <Border x:Name="Border" Grid.ColumnSpan="2" CornerRadius="5"
+                        Background="#1E2433" BorderBrush="#333D54" BorderThickness="1.2" />
+                <Path x:Name="Arrow" Grid.Column="1" Fill="#00E5FF" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Data="M 0 0 L 4 4 L 8 0 Z" />
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Border" Property="BorderBrush" Value="#00E5FF" />
+                    <Setter TargetName="Border" Property="Background" Value="#2A3246" />
+                </Trigger>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter TargetName="Border" Property="BorderBrush" Value="#00E5FF" />
+                    <Setter TargetName="Border" Property="Background" Value="#2A3246" />
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <Style x:Key="DarkComboBoxItem" TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="#F8FAFC" />
+            <Setter Property="Background" Value="#1E2433" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2A3246" />
+                                <Setter Property="TextElement.Foreground" Value="#00E5FF" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2A3246" />
+                                <Setter Property="TextElement.Foreground" Value="#00E5FF" />
+                                <Setter Property="FontWeight" Value="Bold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DarkComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="#00E5FF" />
+            <Setter Property="TextElement.Foreground" Value="#00E5FF" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource DarkComboBoxItem}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid HorizontalAlignment="Stretch">
+                            <ToggleButton Name="ToggleButton" Template="{StaticResource DarkComboBoxToggleButton}" 
+                                          Focusable="False" IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" 
+                                          ClickMode="Press" HorizontalAlignment="Stretch" />
+                            <ContentPresenter Name="ContentSite" IsHitTestVisible="False" 
+                                              TextElement.Foreground="#00E5FF"
+                                              Content="{TemplateBinding SelectionBoxItem}" 
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" 
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" 
+                                              Margin="8,2,24,2" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                            <Popup Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" 
+                                   AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                <Grid Name="DropDown" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="220" Margin="0,3,0,0">
+                                    <Border Name="DropDownBorder" Background="#1E2433" BorderBrush="#00E5FF" BorderThickness="1.2" CornerRadius="5">
+                                        <ScrollViewer Margin="2" SnapsToDevicePixels="True">
+                                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Dark Mode DataGrid Header, Cell & Row Styles (WCAG AAA) -->
+        <Style x:Key="DarkDataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#2A3246"/>
+            <Setter Property="Foreground" Value="#00E5FF"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="BorderBrush" Value="#333D54"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="DarkDataGridCellStyle" TargetType="DataGridCell">
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+            <Setter Property="BorderBrush" Value="#333D54"/>
+            <Setter Property="BorderThickness" Value="0,0,1,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#2A3246"/>
+                    <Setter Property="Foreground" Value="#00E5FF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="DarkDataGridRowStyle" TargetType="DataGridRow">
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#2A3246"/>
+                    <Setter Property="Foreground" Value="#00E5FF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Dark Mode TabItem Style (Pinned Non-Jumping Tabs) -->
+        <Style TargetType="TabItem">
+            <Setter Property="Background" Value="#1E2433"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="BorderBrush" Value="#333D54"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}" Margin="0,0,4,4">
+                            <ContentPresenter x:Name="content" ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2A3246"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#00E5FF"/>
+                                <Setter Property="Foreground" Value="#00E5FF"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#222B3D"/>
+                                <Setter Property="Foreground" Value="#F8FAFC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Custom TabControl Style replacing native TabPanel with WrapPanel (100% Pinned, Zero Jumping) -->
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#333D54"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid KeyboardNavigation.TabNavigation="Local">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <!-- WrapPanel thuần túy làm Header host, triệt tiêu hoàn toàn TabPanel -->
+                            <WrapPanel IsItemsHost="True" Margin="0,0,0,4"/>
+                            <Border Grid.Row="1" Background="{TemplateBinding Background}" 
+                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                <ContentPresenter ContentSource="SelectedContent"/>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="Auto"/> <!-- Phạm vi khung bao -->
+            <RowDefinition Height="*"/>    <!-- Nội dung Tabs -->
+            <RowDefinition Height="Auto"/> <!-- Khối Đóng gói Block & Rải Text -->
+            <RowDefinition Height="Auto"/> <!-- Bottom Status Bar -->
+        </Grid.RowDefinitions>
+
+        <!-- 1. HEADER DIALOG -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="📐 NTT TOOLS" FontWeight="Bold" FontSize="14" Foreground="#00E5FF"/>
+                <TextBlock Text=" | TIỀN XỬ LÝ &amp; CHUẨN HÓA MẶT BẰNG KIẾN TRÚC" FontWeight="SemiBold" FontSize="13" Foreground="#F8FAFC" Margin="4,0,0,0"/>
+            </StackPanel>
+            <Border Background="#FF00E676" CornerRadius="4" Padding="6,2" HorizontalAlignment="Right">
+                <TextBlock Text="CHỈ HUY TRƯỞNG MULTI-AGENT" FontSize="9" FontWeight="Bold" Foreground="#12161F"/>
+            </Border>
+        </DockPanel>
+
+        <!-- 2. KHÓA PHẠM VI MẶT BẰNG (TÍNH NĂNG 3 & 4) -->
+        <Border Grid.Row="1" Style="{StaticResource DialogCardStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📍 KHÓA PHẠM VI XỬ LÝ MẶT BẰNG (LAYER AI_XD_KHUNG_BAO)" FontWeight="Bold" FontSize="11" Foreground="#00E5FF"/>
+                    </StackPanel>
+                    <TextBlock x:Name="txtKhungBaoStatus" Text="Phạm vi hiện tại: Toàn bộ bản vẽ (Chưa chọn khung bao)" 
+                               FontSize="10" Foreground="#94A3B8" Margin="0,3,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="btnPickKhungBao" Content="📐 Quét Khung Mặt Bằng (CAD Pick)" Style="{StaticResource PrimaryCyanBtnStyle}" 
+                            Click="BtnPickKhungBao_Click" Margin="0,0,6,0" ToolTip="Pick 2 điểm chéo góc trên AutoCAD để vẽ khung bao và khóa phạm vi"/>
+                    <Button x:Name="btnClearKhungBao" Content="🧹 Xóa Khung Bao" Style="{StaticResource DarkBtnStyle}" 
+                            Click="BtnClearKhungBao_Click" ToolTip="Xóa khung bao và chuyển về chế độ toàn bản vẽ"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 3. TABS: ÁNH XẠ LAYER & KIỂM TOÁN NGHI NGỜ (TÍNH NĂNG 1, 2, 5) -->
+        <TabControl x:Name="mainTabControl" Grid.Row="2" Background="Transparent" BorderBrush="#333D54" Margin="0,0,0,10" VerticalAlignment="Stretch">
+            <!-- TAB 1: BẢNG LỰA CHỌN & ÁNH XẠ LAYER -->
+            <TabItem Header="📋 ÁNH XẠ LAYER (TÍNH NĂNG 1 &amp; 2)">
+                <Grid Background="#161B26" Margin="0,0,0,0" VerticalAlignment="Stretch">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Thanh Công Cụ Co Dãn Linh Hoạt Theo Tỷ Lệ Cửa Sổ (Grid 8 Cột) -->
+                    <Grid Grid.Row="0" Margin="8,8,8,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.9*"/>
+                            <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition Width="0.9*"/>
+                            <ColumnDefinition Width="1.15*"/>
+                            <ColumnDefinition Width="1.05*"/>
+                            <ColumnDefinition Width="1.15*"/>
+                            <ColumnDefinition Width="1.05*"/>
+                            <ColumnDefinition Width="1.35*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0" x:Name="btnSelectAllLayers" Content="☑ Chọn Hết" 
+                                Style="{StaticResource DarkBtnStyle}" Click="BtnSelectAllLayers_Click" 
+                                HorizontalAlignment="Stretch" Margin="0,0,3,0" Padding="2,5"/>
+                        <Button Grid.Column="1" x:Name="btnAutoMapLayers" Content="🧠 Học &amp; Gợi Ý Layer" 
+                                Style="{StaticResource DarkBtnStyle}" Click="BtnAutoMapLayers_Click" 
+                                HorizontalAlignment="Stretch" Margin="3,0,3,0" Padding="2,5"
+                                ToolTip="Tự động phân biệt Layer 0 vs Bản vẽ có Layer; học từ thống kê hình học &amp; từ điển đã nhớ"/>
+                        <Button Grid.Column="2" x:Name="btnClearLearnedLayers" Content="🧹 Reset Học" 
+                                Style="{StaticResource DarkBtnStyle}" Click="BtnClearLearnedLayers_Click" 
+                                HorizontalAlignment="Stretch" Margin="3,0,3,0" Padding="2,5"
+                                ToolTip="Xóa bộ nhớ từ điển Layer đã học (learned_layer_mappings.json)"/>
+                        <Button Grid.Column="3" x:Name="btnPickLayerFromCad" Content="🎯 Pick Tìm Layer" 
+                                Style="{StaticResource PrimaryCyanBtnStyle}" Click="BtnPickLayerFromCad_Click" 
+                                HorizontalAlignment="Stretch" Margin="3,0,3,0" Padding="2,5" 
+                                ToolTip="Click vào một nét bất kỳ trên AutoCAD để bảng tự động cuộn đến và chọn đúng layer của nét đó (Không zoom CAD)"/>
+                        <Button Grid.Column="4" x:Name="btnToggleIsolateLayers" Content="👁️ Ẩn Layer Phụ" 
+                                Style="{StaticResource DarkBtnStyle}" Click="BtnToggleIsolateLayers_Click" 
+                                HorizontalAlignment="Stretch" Margin="3,0,3,0" Padding="2,5" 
+                                ToolTip="Chỉ ẩn dim, rác. Giữ nguyên 100% Tường, Cột, Cửa, Vách kính, Text và Layer 0"/>
+                        <Button Grid.Column="5" x:Name="btnShowAllLayers" Content="👁️ Hiện Hết Layer" 
+                                Style="{StaticResource DarkBtnStyle}" Click="BtnShowAllLayers_Click" 
+                                HorizontalAlignment="Stretch" Margin="3,0,3,0" Padding="2,5" 
+                                ToolTip="Bật sáng (IsOff = false) và mở khóa 100% toàn bộ layer trên bản vẽ AutoCAD"/>
+                        <Button Grid.Column="6" x:Name="btnAutoCloseDoorGaps" Content="🚪 Ngạch Cửa" 
+                                Style="{StaticResource DarkBtnStyle}" Click="BtnAutoCloseDoorGaps_Click" 
+                                HorizontalAlignment="Stretch" Margin="3,0,3,0" Padding="2,5" 
+                                ToolTip="Dò các vị trí hở cửa trên CAD và nối MLINE song song trên layer AI_XD_DIEM_NOI"/>
+                        <Button Grid.Column="7" x:Name="btnApplyLayerStandardization" Content="🚀 BẮT ĐẦU CHUẨN HÓA" 
+                                Style="{StaticResource AmberBtnStyle}" Click="BtnApplyLayerStandardization_Click" 
+                                HorizontalAlignment="Stretch" Margin="3,0,0,0" Padding="2,5" FontWeight="Bold"
+                                ToolTip="Mở khóa, di dời đối tượng về layer AI_* và lưu lại tri thức Layer đã xác nhận"/>
+                    </Grid>
+
+                    <!-- DataGrid Ánh Xạ Layer -->
+                    <DataGrid Grid.Row="1" x:Name="dgLayerMapping" AutoGenerateColumns="False" CanUserAddRows="False" MaxHeight="250"
+                              Background="#1E2433" Foreground="#F8FAFC" BorderBrush="#333D54" RowBackground="#161B26" 
+                              AlternatingRowBackground="#1A202D" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#333D54"
+                              ColumnHeaderStyle="{StaticResource DarkDataGridColumnHeaderStyle}"
+                              CellStyle="{StaticResource DarkDataGridCellStyle}"
+                              RowStyle="{StaticResource DarkDataGridRowStyle}"
+                              Margin="8,0,8,8">
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="Áp Dụng" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+                            <DataGridTextColumn Header="Layer Gốc (Bản Vẽ)" Binding="{Binding SourceLayer}" IsReadOnly="True" Width="2*"/>
+                            <DataGridTextColumn Header="Số Lượng Nét" Binding="{Binding EntityCount}" IsReadOnly="True" Width="100"/>
+                            <DataGridTemplateColumn Header="Layer Chuẩn AI Mục Tiêu" Width="2*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding AvailableTargetLayers}" 
+                                                  SelectedItem="{Binding TargetLayer, UpdateSourceTrigger=PropertyChanged}"
+                                                  Style="{StaticResource DarkComboBoxStyle}"
+                                                  Height="26" Margin="2,1"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Tình Trạng Nhận Diện" Binding="{Binding StatusNote}" IsReadOnly="True" Width="1.5*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- KHỐI LIVE INSPECTOR & BỘ ĐIỀU KHIỂN NHANH (MỚI) -->
+                    <Border Grid.Row="2" Style="{StaticResource DialogCardStyle}" Margin="8,0,8,8" Padding="10">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="3*"/>
+                                <ColumnDefinition Width="2*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Header Inspector -->
+                            <DockPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="🔍 LIVE CAD INSPECTOR" FontWeight="Bold" FontSize="11" Foreground="#00E5FF"/>
+                                    <TextBlock Text=" | Trích xuất hình học thời gian thực &amp; Can thiệp thủ công" FontSize="10" Foreground="#94A3B8" Margin="4,0,0,0"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Button x:Name="btnLivePickSelection" Content="👆 Quét Nét (CAD Pick)" Style="{StaticResource PrimaryCyanBtnStyle}" Click="BtnLivePickSelection_Click" Margin="0,0,10,0" Padding="8,2" FontSize="10.5"/>
+                                    <TextBlock x:Name="txtLiveSelectedStatus" Text="Chưa chọn đối tượng nào trên CAD" 
+                                               FontSize="10" FontStyle="Italic" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DockPanel>
+
+                            <!-- Cột Trái: Canvas Vector Preview Nền Đen CAD -->
+                            <Border Grid.Row="1" Grid.Column="0" Background="#0A0D14" BorderBrush="#333D54" BorderThickness="1.2" CornerRadius="6" 
+                                    MinHeight="180" Margin="0,0,10,0" ClipToBounds="True">
+                                <Grid>
+                                    <Canvas x:Name="cvsLiveSelectionPreview" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Cursor="Cross">
+                                        <Canvas.RenderTransform>
+                                            <TransformGroup>
+                                                <ScaleTransform x:Name="stLivePreview" ScaleX="1" ScaleY="1"/>
+                                                <TranslateTransform x:Name="ttLivePreview" X="0" Y="0"/>
+                                            </TransformGroup>
+                                        </Canvas.RenderTransform>
+                                    </Canvas>
+                                    <TextBlock x:Name="txtLivePreviewPlaceholder" Text="💡 Quét chọn đối tượng trên AutoCAD để xem hình học Live tại đây" 
+                                               FontSize="10" Foreground="#64748B" FontStyle="Italic" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                    <TextBlock x:Name="txtLivePreviewDimInfo" Text="" FontSize="9" Foreground="#00E5FF" 
+                                               HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8,0,0,6"/>
+                                    <TextBlock Text="🔍 Lăn chuột để Zoom • Giữ chuột để Pan • Nhấp đúp để Fit" FontSize="8.5" Foreground="#64748B" 
+                                               HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,8,6" IsHitTestVisible="False"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Cột Phải: Bảng thông tin & Bộ nút can thiệp -->
+                            <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Top">
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Đối tượng:" FontSize="10.5" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="txtLiveEntitySummary" Grid.Column="1" Text="0 đối tượng" FontWeight="Bold" FontSize="10.5" Foreground="#F8FAFC" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Layer hiện tại:" FontSize="10.5" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="txtLiveCurrentLayer" Grid.Column="1" Text="Chưa có" FontWeight="Bold" FontSize="10.5" Foreground="#FFD54F" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- Khối Chẩn Đoán AI Tức Thời -->
+                                <Border Background="#161B26" BorderBrush="#333D54" BorderThickness="1" CornerRadius="6" Padding="8,6" Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="🤖 AI Chẩn đoán:" FontSize="10" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="txtLiveAiSuggestedLayer" Text="--" FontWeight="Bold" FontSize="10.5" Foreground="#00E676" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="txtLiveAiDiagnosisReason" Text="Chọn đối tượng trên CAD để AI kiểm tra hình học &amp; tri thức" FontSize="9.5" Foreground="#00E5FF" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Dropdown chọn layer & Nút đổi layer -->
+                                <DockPanel Margin="0,0,0,6">
+                                    <ComboBox x:Name="cboLiveTargetLayer" Style="{StaticResource DarkComboBoxStyle}" Width="150" Height="26" Margin="0,0,6,0"/>
+                                    <Button x:Name="btnLiveChangeLayer" Content="⚡ Đổi Layer" Style="{StaticResource AmberBtnStyle}" 
+                                            Click="BtnLiveChangeLayer_Click" Padding="8,4" ToolTip="Chuyển ngay các nét đang chọn trên CAD sang layer này"/>
+                                </DockPanel>
+
+                                <!-- Nút Đóng gói Block cửa & Block tùy chọn -->
+                                <Button x:Name="btnLivePackageDoorBlock" Content="🚪 Đóng Gói Block Cửa (AI_XD_CUA)" Style="{StaticResource PrimaryCyanBtnStyle}" 
+                                        Click="BtnLivePackageDoorBlock_Click" Margin="0,0,0,4" Padding="8,5"
+                                        ToolTip="Gom toàn bộ nét cửa đang chọn thành 1 Block độc lập trên layer AI_XD_CUA"/>
+                                <Button x:Name="btnLivePackageCustomBlock" Content="📦 Đóng Gói Block Tùy Chọn" Style="{StaticResource DarkBtnStyle}" 
+                                        Click="BtnLivePackageCustomBlock_Click" Margin="0,0,0,4" Padding="8,5"
+                                        ToolTip="Gom toàn bộ đối tượng đang chọn thành Block với layer đã chọn ở trên"/>
+                                <Button x:Name="btnLiveLearnShapePattern" Content="🎓 Học Mẫu Phòng / Cụm → Quét Khung Bao" Style="{StaticResource PrimaryCyanBtnStyle}" 
+                                        Click="BtnLiveLearnShapePattern_Click" Margin="0,0,0,4" Padding="8,5"
+                                        ToolTip="Học mẫu từ cụm đang chọn hoặc quét 1 phòng mẫu, sau đó tự tìm toàn bộ các cụm giống hệt (kể cả xoay/đối xứng) trong Khung Bao"/>
+                                <CheckBox x:Name="chkStep2PatternOnly" Content="📌 Chỉ chuẩn hóa theo mẫu Bước 2 (Không đụng Layer khác)"
+                                          Foreground="#00E5FF" FontSize="10" Margin="0,2,0,5"
+                                          Checked="ChkStep2PatternOnly_Changed" Unchecked="ChkStep2PatternOnly_Changed"
+                                          ToolTip="Tự bật sau khi bạn bấm Đổi Layer ở Bước 2: nút 1-Click CHỈ tìm và chuẩn hóa đúng các mẫu bạn vừa dạy, tuyệt đối không đổi layer hay nét khác"/>
+                                <Button x:Name="btnLiveAutoStandardizeAll" Content="⚡ AI Tự Động Chuẩn Hóa Toàn Bản Vẽ (1-Click)" Style="{StaticResource AmberBtnStyle}" 
+                                        Click="BtnLiveAutoStandardizeAll_Click" Padding="8,6"
+                                        ToolTip="Nếu đang bật chế độ Bước 2: chỉ chuẩn hóa đúng mẫu vừa dạy (không đụng layer khác). Nếu tắt: chuẩn hóa toàn bản vẽ"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 2: PREVIEW & KIỂM TOÁN ĐỐI TƯỢNG NGHI NGỜ -->
+            <TabItem Header="🔍 PREVIEW &amp; KIỂM TOÁN (TÍNH NĂNG 5)">
+                <Grid Background="#161B26" Margin="0,0,0,0" VerticalAlignment="Top">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="8,6,8,6">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Hàng 1: Nút quét chính & Thông báo Zoom CAD -->
+                        <DockPanel Grid.Row="0" Margin="0,0,0,6">
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="btnQuickScanAll" Content="⚡ AI Quét &amp; Phân Loại Toàn Bộ" Style="{StaticResource PrimaryCyanBtnStyle}" Click="BtnQuickScanAll_Click" Margin="0,0,6,0" ToolTip="1 click: AI chẩn đoán cả bản vẽ (hoặc trong khung bao), mục chắc chắn tích sẵn, mục nghi ngờ xếp đầu danh sách để bạn kiểm tra"/>
+                                <Button x:Name="btnScanSmartGeometry" Content="🧠 Chẩn Đoán &amp; Học Hình Học AI" Style="{StaticResource AmberBtnStyle}" Click="BtnScanSmartGeometry_Click" Margin="0,0,6,0" ToolTip="Nhận diện Tường song song (>100mm), Cột chèn giữa tường, Cửa, Nội thất, Dim và Grid kể cả trên Layer 0"/>
+                                <Button x:Name="btnScanUnpaired" Content="⚡ Quét Nét Rời Rạc / Tường Song Song" Style="{StaticResource DarkBtnStyle}" Click="BtnScanUnpaired_Click" Margin="0,0,6,0" ToolTip="Liệt kê toàn bộ các nét rời rạc chưa ghép cặp và các cặp song song >100mm"/>
+                                <Button x:Name="btnApplyClassifyAll" Content="⚡ Đổi Layer Đã Chọn" Style="{StaticResource PrimaryCyanBtnStyle}" Click="BtnApplyClassifyAll_Click" Margin="0,0,6,0" ToolTip="Tự động di dời các đối tượng đã chọn về Layer đề xuất"/>
+                                <Button x:Name="btnZoomCad" Content="🔎 Zoom CAD" Style="{StaticResource DarkBtnStyle}" Click="BtnZoomCad_Click" Margin="0,0,6,0"/>
+                            </StackPanel>
+                            <TextBlock Text="💡 Chọn dòng bất kỳ (hoặc phím Lên/Xuống) để CAD tự động Zoom &amp; Highlight nét vẽ" 
+                                       FontSize="10" FontStyle="Italic" Foreground="#00E5FF" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                        </DockPanel>
+
+                        <!-- Hàng 2: Thanh công cụ đổi Layer tùy ý theo ý muốn của kỹ sư -->
+                        <Border Grid.Row="1" Background="#1E2433" CornerRadius="6" Padding="6,4" BorderBrush="#333D54" BorderThickness="1">
+                            <DockPanel>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button x:Name="btnSelectAllSuspicious" Content="☑ Chọn / Bỏ Chọn Tất Cả" Style="{StaticResource DarkBtnStyle}" Click="BtnSelectAllSuspicious_Click" Margin="0,0,10,0"/>
+                                    <TextBlock Text="✏️ Đổi Layer mục tiêu cho các dòng đã chọn:" Foreground="#F8FAFC" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <ComboBox x:Name="cboQuickBatchLayer" Width="170" Height="26" Style="{StaticResource DarkComboBoxStyle}" Margin="0,0,6,0"/>
+                                    <Button x:Name="btnApplyQuickBatch" Content="⚡ Gán Nhanh Cho Dòng Đã Chọn" Style="{StaticResource DarkBtnStyle}" Click="BtnApplyQuickBatch_Click" ToolTip="Gán ngay Layer này cho tất cả các dòng đang được tích chọn"/>
+                                </StackPanel>
+                                <TextBlock Text="💡 Hoặc bấm vào cột 'Layer Đổi Sang' của từng dòng để chọn Layer riêng lẻ" 
+                                           FontSize="10" FontStyle="Italic" Foreground="#94A3B8" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                            </DockPanel>
+                        </Border>
+
+                        <!-- Hàng 3: Thanh tiến trình quét + Hủy -->
+                        <Border x:Name="pnlScanProgress" Grid.Row="2" Visibility="Collapsed" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="0,6,0,0" BorderBrush="#00E5FF" BorderThickness="1">
+                            <DockPanel>
+                                <Button x:Name="btnCancelScan" DockPanel.Dock="Right" Content="⛔ Hủy" Style="{StaticResource DarkBtnStyle}" Click="BtnCancelScan_Click" Margin="8,0,0,0" Padding="12,4"/>
+                                <TextBlock x:Name="txtScanElapsed" DockPanel.Dock="Right" Text="0.0 s" Foreground="#FFD54F" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0,0,0" FontFamily="JetBrains Mono, Cascadia Code, Consolas"/>
+                                <StackPanel>
+                                    <TextBlock x:Name="txtScanProgressText" Text="Đang quét..." Foreground="#F8FAFC" FontSize="10.5" Margin="0,0,0,3"/>
+                                    <ProgressBar x:Name="pbScan" Minimum="0" Maximum="100" Height="8" Foreground="#00E5FF" Background="#12161F" BorderThickness="0"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- DataGrid Đối tượng nghi ngờ -->
+                    <DataGrid Grid.Row="1" x:Name="dgSuspicious" AutoGenerateColumns="False" CanUserAddRows="False" MaxHeight="450"
+                              Background="#1E2433" Foreground="#F8FAFC" BorderBrush="#333D54" RowBackground="#161B26" 
+                              AlternatingRowBackground="#1A202D" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#333D54"
+                              ColumnHeaderStyle="{StaticResource DarkDataGridColumnHeaderStyle}"
+                              CellStyle="{StaticResource DarkDataGridCellStyle}"
+                              RowStyle="{StaticResource DarkDataGridRowStyle}"
+                              Margin="8,0,8,8" SelectionMode="Single" SelectionChanged="DgSuspicious_SelectionChanged" MouseDoubleClick="DgSuspicious_MouseDoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="Chọn" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Width="50"/>
+                            <DataGridTextColumn Header="Handle CAD" Binding="{Binding HandleStr}" IsReadOnly="True" Width="100"/>
+                            <DataGridTextColumn Header="Loại Đối Tượng" Binding="{Binding EntityType}" IsReadOnly="True" Width="100"/>
+                            <DataGridTextColumn Header="Layer Hiện Tại" Binding="{Binding CurrentLayer}" IsReadOnly="True" Width="150"/>
+                            <DataGridTemplateColumn Header="Layer Đổi Sang (Tùy Chọn)" Width="175">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding AvailableTargetLayers}" 
+                                                  SelectedItem="{Binding SuggestedLayer, UpdateSourceTrigger=PropertyChanged}"
+                                                  Style="{StaticResource DarkComboBoxStyle}"
+                                                  Height="24" Margin="2,1"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Tin Cậy AI" Binding="{Binding ConfidenceDisplay}" IsReadOnly="True" Width="130"/>
+                            <DataGridTextColumn Header="Nguyên Nhân Cảnh Báo" Binding="{Binding Reason}" IsReadOnly="True" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            <!-- TAB 3: BAO PHÒNG BÁN TỰ ĐỘNG -->
+            <TabItem x:Name="tabBaoPhong" Header="🎯 BAO BÁN TỰ ĐỘNG (PICK &amp; VÙNG CHỌN)">
+                <Grid Background="#161B26" Margin="0,0,0,0" VerticalAlignment="Top">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Hàng 0: Phạm vi & Nút hành động Chỉ Huy Trưởng -->
+                    <Border Grid.Row="0" Background="#1E2433" CornerRadius="8" Padding="10" Margin="8,8,8,6" BorderBrush="#333D54" BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Checkbox phạm vi theo 9 quy tắc -->
+                            <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                                <TextBlock Text="🎯 PHẠM VI BAO PHÒNG (CORE SPEC):" FontWeight="Bold" FontSize="11" Foreground="#00E5FF" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <WrapPanel VerticalAlignment="Center">
+                                    <CheckBox x:Name="chkRoomMain" Content="Phòng chính (Ngủ, Khách)" IsChecked="True" Foreground="#F8FAFC" Margin="0,0,12,0"/>
+                                    <CheckBox x:Name="chkRoomWc" Content="Nhà WC (Sàn -50mm, Xuyên kính)" IsChecked="True" Foreground="#F8FAFC" Margin="0,0,12,0"/>
+                                    <CheckBox x:Name="chkRoomHopKt" Content="Hộp KT riêng biệt" IsChecked="True" Foreground="#F8FAFC" Margin="0,0,12,0"/>
+                                    <CheckBox x:Name="chkRoomBanCong" Content="Ban công / Lô gia" IsChecked="True" Foreground="#F8FAFC" Margin="0,0,12,0"/>
+                                    <CheckBox x:Name="chkRoomCorridor" Content="Hành lang &amp; Sảnh thang" IsChecked="True" Foreground="#F8FAFC" Margin="0,0,12,0"/>
+                                    <CheckBox x:Name="chkRoomStairs" Content="Hố thang máy &amp; Thang bộ" IsChecked="True" Foreground="#F8FAFC"/>
+                                </WrapPanel>
+                            </DockPanel>
+
+                            <!-- Bộ nút hành động của Chỉ Huy Trưởng -->
+                            <DockPanel Grid.Row="1">
+                                <WrapPanel VerticalAlignment="Center">
+                                    <Button x:Name="btnPickRoomCad" Content="🎯 Bao Nhiều Phòng (Pick Liên Tục)" Style="{StaticResource AmberBtnStyle}" 
+                                            Click="BtnPickRoomCad_Click" Margin="0,0,6,4" Padding="10,6" ToolTip="Click lần lượt các phòng trên CAD. Bấm ENTER hoặc phím ESC khi chọn xong để đưa toàn bộ vào bảng!"/>
+                                    <Button x:Name="btnWindowSelectRooms" Content="🔲 Quét Vùng Chọn (Window CAD)" Style="{StaticResource DarkBtnStyle}" 
+                                            Click="BtnWindowSelectRooms_Click" Margin="0,0,6,4" Padding="10,6" ToolTip="Kéo cửa sổ chọn một khu vực nhiều phòng trên CAD để AI tự động bao tất cả các phòng bên trong!"/>
+                                    <Button x:Name="btnDrawBoundariesCad" Content="✏️ Vẽ Lên CAD" Style="{StaticResource PrimaryCyanBtnStyle}" 
+                                            Click="BtnDrawBoundariesCad_Click" Margin="0,0,6,4" Padding="10,6" ToolTip="Vẽ các đường bao khép kín (LWPOLYLINE) và nhãn MText lên bản vẽ AutoCAD"/>
+                                    <Button x:Name="btnInsertCadTable" Content="📊 Xuất Bảng CAD Table" Style="{StaticResource DarkBtnStyle}" 
+                                            Click="BtnInsertCadTable_Click" Margin="0,0,6,4" Padding="10,6" ToolTip="Vẽ Bảng thống kê diện tích thông thủy trực tiếp lên bản vẽ AutoCAD"/>
+                                    <Button x:Name="btnClearBoundaries" Content="🧹 Xóa Bao" Style="{StaticResource DarkBtnStyle}" 
+                                            Click="BtnClearBoundaries_Click" Margin="0,0,6,4" Padding="10,6" ToolTip="Xóa các đường bao phòng hiện hành trên layer DUONG_BAO và DUONG_BAO_TEXT"/>
+                                </WrapPanel>
+                                <TextBlock Text="💡 Chọn 1 phòng trong danh sách để AutoCAD tự động Zoom &amp; Highlight phòng đó" 
+                                           FontSize="10" FontStyle="Italic" Foreground="#00E5FF" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                            </DockPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Hàng 1: Thẻ KPI thống kê thời gian thực -->
+                    <Grid Grid.Row="1" Margin="8,0,8,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Thẻ 1: Tổng số phòng -->
+                        <Border Grid.Column="0" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="0,0,4,0" BorderBrush="#333D54" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="TỔNG PHÒNG" FontSize="9" Foreground="#94A3B8" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="txtKpiTotalRooms" Text="0 phòng" FontSize="14" FontWeight="Bold" Foreground="#00E5FF" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Thẻ 2: Tổng diện tích S -->
+                        <Border Grid.Column="1" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="2,0,4,0" BorderBrush="#333D54" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="TỔNG DIỆN TÍCH S" FontSize="9" Foreground="#94A3B8" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="txtKpiTotalArea" Text="0.00 m²" FontSize="14" FontWeight="Bold" Foreground="#00E676" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Thẻ 3: Tổng chu vi P -->
+                        <Border Grid.Column="2" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="2,0,4,0" BorderBrush="#333D54" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="TỔNG CHU VI P" FontSize="9" Foreground="#94A3B8" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="txtKpiTotalPerimeter" Text="0.00 m" FontSize="14" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Thẻ 4: Nhà WC (-50mm) -->
+                        <Border Grid.Column="3" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="2,0,4,0" BorderBrush="#333D54" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="NHÀ WC (SÀN ÂM)" FontSize="9" Foreground="#94A3B8" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="txtKpiTotalWc" Text="0 WC (-50mm)" FontSize="14" FontWeight="Bold" Foreground="#FF9100" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Thẻ 5: Hộp KT độc lập -->
+                        <Border Grid.Column="4" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="2,0,4,0" BorderBrush="#333D54" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="HỘP KT RIÊNG BIỆT" FontSize="9" Foreground="#94A3B8" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="txtKpiTotalHopKt" Text="0 Hộp KT" FontSize="14" FontWeight="Bold" Foreground="#FFD600" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Thẻ 6: Ban công / Lô gia -->
+                        <Border Grid.Column="5" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="2,0,0,0" BorderBrush="#333D54" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="BAN CÔNG / LÔ GIA" FontSize="9" Foreground="#94A3B8" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="txtKpiTotalBanCong" Text="0 Ban Công" FontSize="14" FontWeight="Bold" Foreground="#E040FB" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Hàng 2: DataGrid danh sách phòng -->
+                    <DataGrid Grid.Row="2" x:Name="dgRoomResults" AutoGenerateColumns="False" CanUserAddRows="False" MaxHeight="380"
+                              Background="#1E2433" Foreground="#F8FAFC" BorderBrush="#333D54" RowBackground="#161B26" 
+                              AlternatingRowBackground="#1A202D" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#333D54"
+                              ColumnHeaderStyle="{StaticResource DarkDataGridColumnHeaderStyle}"
+                              CellStyle="{StaticResource DarkDataGridCellStyle}"
+                              RowStyle="{StaticResource DarkDataGridRowStyle}"
+                              Margin="8,0,8,6" SelectionMode="Single" SelectionChanged="DgRoomResults_SelectionChanged" MouseDoubleClick="DgRoomResults_MouseDoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="Vẽ" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Width="45"/>
+                            <DataGridTextColumn Header="Biểu Tượng" Binding="{Binding RoomIcon}" IsReadOnly="True" Width="70"/>
+                            <DataGridTextColumn Header="Mã / Tên Phòng" Binding="{Binding RoomName}" IsReadOnly="True" Width="180"/>
+                            <DataGridTextColumn Header="Phân Loại Không Gian" Binding="{Binding RoomTypeBadge}" IsReadOnly="True" Width="150"/>
+                            <DataGridTextColumn Header="Diện Tích (m²)" Binding="{Binding AreaDisplay}" IsReadOnly="True" Width="110"/>
+                            <DataGridTextColumn Header="Chu Vi (m)" Binding="{Binding PerimeterDisplay}" IsReadOnly="True" Width="100"/>
+                            <DataGridTextColumn Header="Cao Độ Sàn" Binding="{Binding ElevationDisplay}" IsReadOnly="True" Width="90"/>
+                            <DataGridTextColumn Header="Đối Chiếu Quy Tắc AI (Core Spec)" Binding="{Binding RuleComplianceNote}" IsReadOnly="True" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Hàng 3: Expander 9 Quy Tắc Cốt Lõi Tri Thức -->
+                    <Expander Grid.Row="3" Header="📖 BỘ TRI THỨC 9 QUY TẮC CỐT LÕI BAO PHÒNG (CORE SPEC)" 
+                              Foreground="#94A3B8" Background="#1A202D" Margin="8,0,8,6" Padding="6" BorderBrush="#333D54" IsExpanded="False">
+                        <TextBlock TextWrapping="Wrap" Foreground="#CBD5E1" FontSize="11" LineHeight="16">
+                            • QT 01: Bo 100% không gian khép kín; phòng không tên gán số phòng PH-xx.
+                            • QT 02: Nhà WC luôn tách riêng là 1 phòng độc lập, bám mép trong tường.
+                            • QT 03: Hộp KT là khu vực riêng biệt có tên &amp; diện tích S; buồng WC bẻ góc chữ L ôm quanh.
+                            • QT 04: Ban công/Lô gia bao riêng biệt nằm ngoài mép tường ngoại vi, tách qua cửa lùa.
+                            • QT 05: Vách kính phòng tắm trong WC (&lt;100mm) xuyên thấu 100%, không coi là tường.
+                            • QT 06: Đóng ngạch cửa đồng trục theo mép trong tường (dung sai &lt;= 5mm).
+                            • QT 07: Phân định riêng Sảnh thang (trước thang máy) vs Hành lang căn hộ.
+                            • QT 08: Ôm sát cột/vách kết cấu; bắn xuyên qua thiết bị nội thất rời.
+                            • QT 09: Tường phân cách phải song song (100/150/200mm), góc 90° hoặc vát 45°, cấm nét đá xiên.
+                        </TextBlock>
+                    </Expander>
+                </Grid>
+            </TabItem>
+                    <!-- TAB 4: XỬ LÝ BẰNG AI (CHỈ HUY TRƯỞNG MULTI-AGENT & BAO PHÒNG TỰ ĐỘNG) -->
+            <!-- TAB 4: XỬ LÝ BẰNG AI (CHỈ HUY TRƯỞNG MULTI-AGENT & BAO PHÒNG TỰ ĐỘNG) -->
+            <TabItem x:Name="tabAiProcessing" Header="🤖 XỬ LÝ BẰNG AI (CHỈ HUY TRƯỞNG)">
+                <Grid Background="#161B26" Margin="0,4,0,0" VerticalAlignment="Stretch">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Hàng 0: Trung tâm điều phối AI -->
+                    <Border Grid.Row="0" Background="#1E2433" CornerRadius="8" Padding="12" Margin="8,8,8,6" BorderBrush="#00E5FF" BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Checkbox phạm vi AI -->
+                            <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                                <TextBlock Text="🤖 ĐIỀU PHỐI MULTI-AGENT AI (9 QUY TẮC CỐT LÕI):" FontWeight="Bold" FontSize="11" Foreground="#00E5FF" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <WrapPanel VerticalAlignment="Center">
+                                    <CheckBox x:Name="chkAiRoomMain" Content="Phòng chính (Ngủ, Khách)" IsChecked="True" Foreground="#F8FAFC" Margin="0,0,12,0"/>
+                                    <CheckBox x:Name="chkAiRoomWc" Content="Nhà WC (Sàn -50mm, Xuyên kính)" IsChecked="True" Foreground="#F8FAFC" Margin="0,0,12,0"/>
+                                    <CheckBox x:Name="chkAiRoomHopKt" Content="Hộp KT riêng biệt" IsChecked="True" Foreground="#F8FAFC" Margin="0,0,12,0"/>
+                                    <CheckBox x:Name="chkAiRoomBanCong" Content="Ban công / Lô gia" IsChecked="True" Foreground="#F8FAFC" Margin="0,0,12,0"/>
+                                    <CheckBox x:Name="chkAiRoomCorridor" Content="Hành lang &amp; Sảnh thang" IsChecked="True" Foreground="#F8FAFC" Margin="0,0,12,0"/>
+                                    <CheckBox x:Name="chkAiRoomStairs" Content="Hố thang máy &amp; Thang bộ" IsChecked="True" Foreground="#F8FAFC"/>
+                                </WrapPanel>
+                            </DockPanel>
+
+                            <!-- 2 Nút AI đưa về đây theo đúng yêu cầu của người dùng -->
+                            <DockPanel Grid.Row="1">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button x:Name="btnTriggerMultiAgent" Content="⚡ KÍCH HOẠT CHỈ HUY TRƯỞNG BAO PHÒNG AI" Style="{StaticResource AmberBtnStyle}" 
+                                            Click="BtnTriggerMultiAgent_Click" Margin="0,0,8,0" Padding="16,8" ToolTip="Chỉ Huy Trưởng Agon điều phối Multi-Agent quét hình học, tự động ôm cột, ngắt ngạch cửa, bo trọn 100% không gian"/>
+                                    <Button x:Name="btnQuickRunBoundary" Content="⚡ BAO PHÒNG NHANH AI (1-CLICK LOD 300)" Style="{StaticResource PrimaryCyanBtnStyle}" 
+                                            Click="BtnQuickRunBoundary_Click" Margin="0,0,8,0" Padding="14,8" ToolTip="Tự động bóc tách và vẽ ngay các đường bao lên CAD trong 1 click duy nhất"/>
+                                    <Button x:Name="btnAiDrawCad" Content="✏️ Vẽ Lên CAD" Style="{StaticResource DarkBtnStyle}" 
+                                            Click="BtnDrawBoundariesCad_Click" Margin="0,0,8,0" ToolTip="Vẽ các đường bao khép kín (LWPOLYLINE) và nhãn MText lên bản vẽ AutoCAD"/>
+                                    <Button x:Name="btnAiExportTable" Content="📊 Xuất Bảng CAD Table" Style="{StaticResource DarkBtnStyle}" 
+                                            Click="BtnInsertCadTable_Click" Margin="0,0,8,0" ToolTip="Vẽ Bảng thống kê diện tích thông thủy trực tiếp lên bản vẽ AutoCAD"/>
+                                    <Button x:Name="btnAiClear" Content="🧹 Xóa Bao" Style="{StaticResource DarkBtnStyle}" 
+                                            Click="BtnClearBoundaries_Click" ToolTip="Xóa các đường bao phòng hiện hành trên layer DUONG_BAO và DUONG_BAO_TEXT"/>
+                                </StackPanel>
+                                <TextBlock Text="💡 Toàn bộ tri thức GNN &amp; 9 Quy tắc hình học cốt lõi được áp dụng tự động 100%" 
+                                           FontSize="10" FontStyle="Italic" Foreground="#00E676" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                            </DockPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Hàng 1: Thẻ KPI kết quả AI -->
+                    <Grid Grid.Row="1" Margin="8,0,8,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="0,0,4,0" BorderBrush="#333D54" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="PHÒNG AI PHÁT HIỆN" FontSize="9" Foreground="#94A3B8" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="txtAiKpiRooms" Text="0 phòng" FontSize="14" FontWeight="Bold" Foreground="#00E5FF" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="2,0,4,0" BorderBrush="#333D54" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="TỔNG DIỆN TÍCH S" FontSize="9" Foreground="#94A3B8" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="txtAiKpiArea" Text="0.00 m²" FontSize="14" FontWeight="Bold" Foreground="#00E676" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="2" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="2,0,4,0" BorderBrush="#333D54" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="TỔNG CHU VI P" FontSize="9" Foreground="#94A3B8" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="txtAiKpiPerimeter" Text="0.00 m" FontSize="14" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="3" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="2,0,4,0" BorderBrush="#333D54" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="NHÀ WC (SÀN ÂM)" FontSize="9" Foreground="#94A3B8" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="txtAiKpiWc" Text="0 WC (-50mm)" FontSize="14" FontWeight="Bold" Foreground="#FF9100" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="4" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="2,0,4,0" BorderBrush="#333D54" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="HỘP KT RIÊNG BIỆT" FontSize="9" Foreground="#94A3B8" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="txtAiKpiHopKt" Text="0 Hộp KT" FontSize="14" FontWeight="Bold" Foreground="#FFD600" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="5" Background="#1E2433" CornerRadius="6" Padding="8,6" Margin="2,0,0,0" BorderBrush="#333D54" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="BAN CÔNG / LÔ GIA" FontSize="9" Foreground="#94A3B8" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="txtAiKpiBanCong" Text="0 Ban Công" FontSize="14" FontWeight="Bold" Foreground="#E040FB" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Hàng 2: DataGrid danh sách phòng do AI bóc tách -->
+                    <DataGrid Grid.Row="2" x:Name="dgAiRoomResults" AutoGenerateColumns="False" CanUserAddRows="False" MaxHeight="200"
+                              Background="#1E2433" Foreground="#F8FAFC" BorderBrush="#333D54" RowBackground="#161B26" 
+                              AlternatingRowBackground="#1A202D" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#333D54"
+                              ColumnHeaderStyle="{StaticResource DarkDataGridColumnHeaderStyle}"
+                              CellStyle="{StaticResource DarkDataGridCellStyle}"
+                              RowStyle="{StaticResource DarkDataGridRowStyle}"
+                              Margin="8,0,8,6" SelectionMode="Single" SelectionChanged="DgRoomResults_SelectionChanged" MouseDoubleClick="DgRoomResults_MouseDoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="Vẽ" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Width="45"/>
+                            <DataGridTextColumn Header="Biểu Tượng" Binding="{Binding RoomIcon}" IsReadOnly="True" Width="70"/>
+                            <DataGridTextColumn Header="Mã / Tên Phòng" Binding="{Binding RoomName}" IsReadOnly="True" Width="180"/>
+                            <DataGridTextColumn Header="Phân Loại Không Gian" Binding="{Binding RoomTypeBadge}" IsReadOnly="True" Width="150"/>
+                            <DataGridTextColumn Header="Diện Tích (m²)" Binding="{Binding AreaDisplay}" IsReadOnly="True" Width="110"/>
+                            <DataGridTextColumn Header="Chu Vi (m)" Binding="{Binding PerimeterDisplay}" IsReadOnly="True" Width="100"/>
+                            <DataGridTextColumn Header="Cao Độ Sàn" Binding="{Binding ElevationDisplay}" IsReadOnly="True" Width="90"/>
+                            <DataGridTextColumn Header="Đối Chiếu Quy Tắc AI (Core Spec)" Binding="{Binding RuleComplianceNote}" IsReadOnly="True" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Hàng 3: KHỐI LIVE CAD INSPECTOR CHO TAB 4 (CHỈ HUY TRƯỞNG) -->
+                    <Border Grid.Row="3" Style="{StaticResource DialogCardStyle}" Margin="8,0,8,8" Padding="10">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="3*"/>
+                                <ColumnDefinition Width="2*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Header Inspector -->
+                            <DockPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="🔍 LIVE CAD INSPECTOR" FontWeight="Bold" FontSize="11" Foreground="#00E5FF"/>
+                                    <TextBlock Text=" | Trích xuất hình học thời gian thực &amp; Can thiệp thủ công (Chỉ Huy Trưởng)" FontSize="10" Foreground="#94A3B8" Margin="4,0,0,0"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Button x:Name="btnAiLivePickSelection" Content="👆 Quét Nét (CAD Pick)" Style="{StaticResource PrimaryCyanBtnStyle}" Click="BtnLivePickSelection_Click" Margin="0,0,10,0" Padding="8,2" FontSize="10.5"/>
+                                    <TextBlock x:Name="txtAiLiveSelectedStatus" Text="Chưa chọn đối tượng nào trên CAD" 
+                                               FontSize="10" FontStyle="Italic" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DockPanel>
+
+                            <!-- Cột Trái: Canvas Vector Preview Nền Đen CAD -->
+                            <Border Grid.Row="1" Grid.Column="0" Background="#0A0D14" BorderBrush="#333D54" BorderThickness="1.2" CornerRadius="6" 
+                                    MinHeight="180" Margin="0,0,10,0" ClipToBounds="True">
+                                <Grid>
+                                    <Canvas x:Name="cvsAiLiveSelectionPreview" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Cursor="Cross">
+                                        <Canvas.RenderTransform>
+                                            <TransformGroup>
+                                                <ScaleTransform x:Name="stAiLivePreview" ScaleX="1" ScaleY="1"/>
+                                                <TranslateTransform x:Name="ttAiLivePreview" X="0" Y="0"/>
+                                            </TransformGroup>
+                                        </Canvas.RenderTransform>
+                                    </Canvas>
+                                    <TextBlock x:Name="txtAiLivePreviewPlaceholder" Text="💡 Quét chọn đối tượng trên AutoCAD để xem hình học Live tại đây" 
+                                               FontSize="10" Foreground="#64748B" FontStyle="Italic" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                    <TextBlock x:Name="txtAiLivePreviewDimInfo" Text="" FontSize="9" Foreground="#00E5FF" 
+                                               HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8,0,0,6"/>
+                                    <TextBlock Text="🔍 Lăn chuột để Zoom • Giữ chuột để Pan • Nhấp đúp để Fit" FontSize="8.5" Foreground="#64748B" 
+                                               HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,8,6" IsHitTestVisible="False"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Cột Phải: Bảng thông tin & Bộ nút can thiệp -->
+                            <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Top">
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Đối tượng:" FontSize="10.5" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="txtAiLiveEntitySummary" Grid.Column="1" Text="0 đối tượng" FontWeight="Bold" FontSize="10.5" Foreground="#F8FAFC" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Layer hiện tại:" FontSize="10.5" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="txtAiLiveCurrentLayer" Grid.Column="1" Text="Chưa có" FontWeight="Bold" FontSize="10.5" Foreground="#FFD54F" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- Khối Chẩn Đoán AI Tức Thời -->
+                                <Border Background="#161B26" BorderBrush="#333D54" BorderThickness="1" CornerRadius="6" Padding="8,6" Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="🤖 AI Chẩn đoán:" FontSize="10" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="txtAiLiveAiSuggestedLayer" Text="--" FontWeight="Bold" FontSize="10.5" Foreground="#00E676" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="txtAiLiveAiDiagnosisReason" Text="Chọn đối tượng trên CAD để AI kiểm tra hình học &amp; tri thức" FontSize="9.5" Foreground="#00E5FF" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Dropdown chọn layer & Nút đổi layer -->
+                                <DockPanel Margin="0,0,0,6">
+                                    <ComboBox x:Name="cboAiLiveTargetLayer" Style="{StaticResource DarkComboBoxStyle}" Width="150" Height="26" Margin="0,0,6,0"/>
+                                    <Button x:Name="btnAiLiveChangeLayer" Content="⚡ Đổi Layer" Style="{StaticResource AmberBtnStyle}" 
+                                            Click="BtnLiveChangeLayer_Click" Padding="8,4" ToolTip="Chuyển ngay các nét đang chọn trên CAD sang layer này"/>
+                                </DockPanel>
+
+                                <!-- Nút Đóng gói Block cửa & Block tùy chọn -->
+                                <Button x:Name="btnAiLivePackageDoorBlock" Content="🚪 Đóng Gói Block Cửa (AI_XD_CUA)" Style="{StaticResource PrimaryCyanBtnStyle}" 
+                                        Click="BtnLivePackageDoorBlock_Click" Margin="0,0,0,4" Padding="8,5"
+                                        ToolTip="Gom toàn bộ nét cửa đang chọn thành 1 Block độc lập trên layer AI_XD_CUA"/>
+                                <Button x:Name="btnAiLivePackageCustomBlock" Content="📦 Đóng Gói Block Tùy Chọn" Style="{StaticResource DarkBtnStyle}" 
+                                        Click="BtnLivePackageCustomBlock_Click" Margin="0,0,0,4" Padding="8,5"
+                                        ToolTip="Gom toàn bộ đối tượng đang chọn thành Block với layer đã chọn ở trên"/>
+                                <Button x:Name="btnAiLiveLearnShapePattern" Content="🎓 Học Mẫu Phòng / Cụm → Quét Khung Bao" Style="{StaticResource PrimaryCyanBtnStyle}" 
+                                        Click="BtnLiveLearnShapePattern_Click" Margin="0,0,0,4" Padding="8,5"
+                                        ToolTip="Học mẫu từ cụm đang chọn hoặc quét 1 phòng mẫu, sau đó tự tìm toàn bộ các cụm giống hệt (kể cả xoay/đối xứng) trong Khung Bao"/>
+                                <CheckBox x:Name="chkAiStep2PatternOnly" Content="📌 Chỉ chuẩn hóa theo mẫu Bước 2 (Không đụng Layer khác)"
+                                          Foreground="#00E5FF" FontSize="10" Margin="0,2,0,5"
+                                          Checked="ChkStep2PatternOnly_Changed" Unchecked="ChkStep2PatternOnly_Changed"
+                                          ToolTip="Tự bật sau khi bạn bấm Đổi Layer ở Bước 2: nút 1-Click CHỈ tìm và chuẩn hóa đúng các mẫu bạn vừa dạy, tuyệt đối không đổi layer hay nét khác"/>
+                                <Button x:Name="btnAiLiveAutoStandardizeAll" Content="⚡ AI Tự Động Chuẩn Hóa Toàn Bản Vẽ (1-Click)" Style="{StaticResource AmberBtnStyle}" 
+                                        Click="BtnLiveAutoStandardizeAll_Click" Padding="8,6"
+                                        ToolTip="Nếu đang bật chế độ Bước 2: chỉ chuẩn hóa đúng mẫu vừa dạy (không đụng layer khác). Nếu tắt: chuẩn hóa toàn bản vẽ"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 5: CẤU HÌNH NHÃN TEXT & SONG NGỮ -->
+            <TabItem x:Name="tabTextConfig" Header="⚙️ CẤU HÌNH NHÃN TEXT &amp; SONG NGỮ">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Background="#161B26" Margin="12">
+                        <!-- GroupBox 1: Cỡ chữ hiển thị -->
+                        <Border Style="{StaticResource DialogCardStyle}" Margin="0,0,0,12" Padding="14">
+                            <StackPanel>
+                                <DockPanel Margin="0,0,0,10">
+                                    <TextBlock Text="📏 QUY CÁCH CỠ CHỮ HIỂN THỊ TRÊN BẢN VẼ" FontWeight="Bold" FontSize="11.5" Foreground="#00E5FF"/>
+                                    <TextBlock Text="Đồng bộ cho mọi chức năng rải nhãn MText" FontSize="10" Foreground="#94A3B8" HorizontalAlignment="Right"/>
+                                </DockPanel>
+
+                                <!-- Tự động vs Thủ công -->
+                                <StackPanel Margin="0,0,0,10">
+                                    <RadioButton x:Name="rbAutoTextHeight" GroupName="TextHeightGroup" Content="Tự Động (Theo Chuẩn CĐT: 100mm cho WC, Ban công, Hộp KT • 200mm cho Phòng Ngủ, Khách, Bếp, Văn phòng)" 
+                                                 IsChecked="True" Foreground="#F8FAFC" FontWeight="SemiBold" Margin="0,0,0,8" Checked="RbTextHeight_Checked"/>
+                                    <RadioButton x:Name="rbManualTextHeight" GroupName="TextHeightGroup" Content="Thủ Công (Kỹ sư tự chỉ định kích thước chữ cho từng loại không gian)" 
+                                                 Foreground="#F8FAFC" FontWeight="SemiBold" Checked="RbTextHeight_Checked"/>
+                                </StackPanel>
+
+                                <!-- Bảng nhập cỡ chữ thủ công -->
+                                <Border x:Name="pnlManualTextHeight" Background="#1E2433" CornerRadius="6" Padding="12,10" BorderBrush="#333D54" BorderThickness="1" IsEnabled="False" Opacity="0.5">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                            <TextBlock Text="Phòng chính / Văn phòng (mm):" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="txtHeightMainRoom" Text="200" Background="#161B26" Foreground="#00E5FF" BorderBrush="#333D54" Padding="6,4" FontWeight="Bold" TextChanged="TxtManualHeight_TextChanged"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="4,0,4,0">
+                                            <TextBlock Text="Nhà WC / Ban công / Lô gia (mm):" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="txtHeightWcBalcony" Text="100" Background="#161B26" Foreground="#00E5FF" BorderBrush="#333D54" Padding="6,4" FontWeight="Bold" TextChanged="TxtManualHeight_TextChanged"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Margin="8,0,0,0">
+                                            <TextBlock Text="Hộp Gen kỹ thuật (mm):" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="txtHeightHopKt" Text="100" Background="#161B26" Foreground="#00E5FF" BorderBrush="#333D54" Padding="6,4" FontWeight="Bold" TextChanged="TxtManualHeight_TextChanged"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- GroupBox 2: Ngôn ngữ & Song ngữ hiển thị -->
+                        <Border Style="{StaticResource DialogCardStyle}" Margin="0,0,0,12" Padding="14">
+                            <StackPanel>
+                                <DockPanel Margin="0,0,0,10">
+                                    <TextBlock Text="🌐 NGÔN NGỮ &amp; TÙY CHỌN SONG NGỮ (VIỆT - ANH - TRUNG)" FontWeight="Bold" FontSize="11.5" Foreground="#FF9100"/>
+                                    <TextBlock Text="Tự động dịch thuật từ điển công năng phòng" FontSize="10" Foreground="#94A3B8" HorizontalAlignment="Right"/>
+                                </DockPanel>
+
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <RadioButton x:Name="rbLangVnOnly" GroupName="LanguageOptionGroup" Content="🇻🇳 Tiếng Việt (Thuần)" IsChecked="True" Foreground="#F8FAFC" Margin="0,0,0,8" Checked="RbLang_Checked"/>
+                                        <RadioButton x:Name="rbLangVnEn" GroupName="LanguageOptionGroup" Content="🇬🇧 Song ngữ Việt - Anh (e.g. PHÒNG NGỦ / BEDROOM)" Foreground="#F8FAFC" Margin="0,0,0,8" Checked="RbLang_Checked"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1">
+                                        <RadioButton x:Name="rbLangVnCn" GroupName="LanguageOptionGroup" Content="🇨🇳 Song ngữ Việt - Trung (e.g. PHÒNG NGỦ / 卧室)" Foreground="#F8FAFC" Margin="0,0,0,8" Checked="RbLang_Checked"/>
+                                        <RadioButton x:Name="rbLangTri" GroupName="LanguageOptionGroup" Content="🌏 Đa ngữ Việt - Anh - Trung (3 Ngôn Ngữ)" Foreground="#F8FAFC" Checked="RbLang_Checked"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border Background="#1E2433" CornerRadius="6" Padding="12,10" BorderBrush="#333D54" BorderThickness="1">
+                                    <DockPanel LastChildFill="True">
+                                        <TextBlock Text="💡 Mẫu hiển thị:" FontSize="10.5" Foreground="#94A3B8" VerticalAlignment="Top" Margin="0,2,12,0" DockPanel.Dock="Left"/>
+                                        <TextBlock x:Name="txtPreviewSampleText" Text="PHÒNG NGỦ&#x0a;S=24.50 m²" FontWeight="Bold" FontSize="11.5" Foreground="#00E676" LineHeight="18"/>
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- GroupBox 3: Font chữ & Tiêu chuẩn hiển thị -->
+                        <Border Style="{StaticResource DialogCardStyle}" Padding="14">
+                            <StackPanel>
+                                <TextBlock Text="🔤 TIÊU CHUẨN FONT CHỮ &amp; ĐỊNH DẠNG MTEXT" FontWeight="Bold" FontSize="11.5" Foreground="#00E676" Margin="0,0,0,10"/>
+                                
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="TextStyle CAD:" FontSize="10.5" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                    <TextBlock Text="AI_UNICODE_TEXT (Font Arial.ttf - Cam kết 100% tiếng Việt có dấu, không bao giờ lỗi font '???')" 
+                                               Grid.Column="1" FontWeight="Bold" FontSize="10.5" Foreground="#00E5FF" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Quy cách nội dung:" FontSize="10.5" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Tên phòng nằm trên, Diện tích S nằm dưới • Riêng Hộp KT chỉ ghi tên Hộp KT, không ghi diện tích" 
+                                               Grid.Column="1" FontWeight="Bold" FontSize="10.5" Foreground="#F8FAFC" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- 4. KHỐI ĐÓNG GÓI BLOCK & RẢI NHÃN MTEXT (TÍNH NĂNG 6 & 7) -->
+        <Border Grid.Row="3" Style="{StaticResource DialogCardStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="📦 ĐÓNG GÓI BLOCK &amp; RẢI NHÃN MTEXT TỰ ĐỘNG (TÍNH NĂNG 6 &amp; 7)" FontWeight="Bold" FontSize="11" Foreground="#FF9100"/>
+                    <TextBlock Text="Tự động gom cụm nét cửa (Arc, Line, Polyline) thành Block AI_DOOR và rải Text diện tích tâm phòng" 
+                               FontSize="10" Foreground="#94A3B8" Margin="0,3,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="btnPackageDoors" Content="📦 Đóng Gói Block Cửa (AI_DOOR)" Style="{StaticResource DarkBtnStyle}" 
+                            Click="BtnPackageDoors_Click" Margin="0,0,6,0" ToolTip="Gom cụm nét cửa trên AI_XD_CUA và đóng thành Block INSERT"/>
+                    <Button x:Name="btnAutoPlaceText" Content="🏷️ Rải Text Tự Động (Tâm Phòng)" Style="{StaticResource PrimaryCyanBtnStyle}" 
+                            Click="BtnAutoPlaceText_Click" ToolTip="Rải MText Tên Phòng &amp; Diện tích S chuẩn mm vào tâm thông thủy"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 5. BOTTOM STATUS BAR & THOÁT -->
+        <DockPanel Grid.Row="4" Margin="0,4,0,0">
+            <TextBlock x:Name="txtDialogStatus" Text="Sẵn sàng. Vui lòng bấm Quét Khung Mặt Bằng để bắt đầu." 
+                       FontSize="10" Foreground="#00E5FF" VerticalAlignment="Center"/>
+            <Button Content="Đóng Cửa Sổ" Style="{StaticResource DarkBtnStyle}" Click="BtnClose_Click" HorizontalAlignment="Right" Padding="16,6"/>
+        </DockPanel>
+    </Grid>
+</Window>

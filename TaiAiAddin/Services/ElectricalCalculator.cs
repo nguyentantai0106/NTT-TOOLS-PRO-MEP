@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 
 using System.Collections.Generic;
 
@@ -79,155 +79,126 @@ namespace TaiAiAddin.Services
         /// </summary>
 
         public void AutoBalancePhases(ElectricalPanel panel)
-
         {
-
             if (panel == null || panel.Loads == null || panel.Loads.Count == 0) return;
 
-            // 1. Tính tổng công suất cơ sở từ các phụ tải 3 pha
-
-            double sumR = 0;
-
-            double sumY = 0;
-
-            double sumB = 0;
-
-            foreach (ElectricalLoad load in panel.Loads)
-
-            {
-
-                if (load.IsSpare || (!string.IsNullOrEmpty(load.LoadName) && (load.LoadName.ToUpper().Contains("SPARE") || load.LoadName.ToUpper().Contains("DỰ PHÒNG"))))
-
-                {
-
-                    continue;
-
-                }
-
-                if (load.Phase == PhaseType.ThreePhase)
-
-                {
-
-                    double p3 = load.PowerKW / 3.0;
-
-                    load.PowerR = p3;
-
-                    load.PowerY = p3;
-
-                    load.PowerB = p3;
-
-                    load.AssignedPhase = "3P";
-
-                    sumR += p3;
-
-                    sumY += p3;
-
-                    sumB += p3;
-
-                }
-
-            }
-
-            // 2. Lấy danh sách phụ tải 1 pha và sắp xếp giảm dần theo công suất (Greedy LPT)
-
+            // 1. Phân loại phụ tải thành 3 nhóm: 3P thường, 1P thường, Dự phòng
+            List<ElectricalLoad> threePhaseLoads = new List<ElectricalLoad>();
             List<ElectricalLoad> singlePhaseLoads = new List<ElectricalLoad>();
+            List<ElectricalLoad> spareLoads = new List<ElectricalLoad>();
 
             foreach (ElectricalLoad load in panel.Loads)
-
             {
+                bool isSpare = load.IsSpare ||
+                    (!string.IsNullOrEmpty(load.CircuitNumber) && load.CircuitNumber.StartsWith("SPARE", StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(load.LoadName) && (load.LoadName.ToUpper().Contains("SPARE") || load.LoadName.ToUpper().Contains("DỰ PHÒNG")));
 
-                if (load.IsSpare || (!string.IsNullOrEmpty(load.LoadName) && (load.LoadName.ToUpper().Contains("SPARE") || load.LoadName.ToUpper().Contains("DỰ PHÒNG"))))
-
+                if (isSpare)
                 {
-
-                    continue;
-
+                    load.IsSpare = true;
+                    spareLoads.Add(load);
                 }
-
-                if (load.Phase == PhaseType.SinglePhase)
-
+                else if (load.Phase == PhaseType.ThreePhase)
                 {
-
+                    threePhaseLoads.Add(load);
+                }
+                else
+                {
                     singlePhaseLoads.Add(load);
-
                 }
-
             }
 
-            singlePhaseLoads.Sort(delegate(ElectricalLoad a, ElectricalLoad b)
-
+            // 2. Sắp xếp phụ tải 3P giảm dần từ lớn đến nhỏ
+            threePhaseLoads.Sort(delegate(ElectricalLoad a, ElectricalLoad b)
             {
-
                 return b.PowerKW.CompareTo(a.PowerKW);
-
             });
 
-            // 3. Phân bổ thông minh vào pha có tổng tải nhỏ nhất
+            double sumR = 0;
+            double sumY = 0;
+            double sumB = 0;
 
-            foreach (ElectricalLoad load in singlePhaseLoads)
-
+            foreach (ElectricalLoad load in threePhaseLoads)
             {
-
-                double pVal = load.PowerKW;
-
-                if (pVal <= 0.0001) continue;
-
-                if (sumR <= sumY && sumR <= sumB)
-
-                {
-
-                    load.AssignedPhase = "R";
-
-                    load.PowerR = pVal;
-
-                    load.PowerY = 0;
-
-                    load.PowerB = 0;
-
-                    sumR += pVal;
-
-                }
-
-                else if (sumY <= sumR && sumY <= sumB)
-
-                {
-
-                    load.AssignedPhase = "Y";
-
-                    load.PowerY = pVal;
-
-                    load.PowerR = 0;
-
-                    load.PowerB = 0;
-
-                    sumY += pVal;
-
-                }
-
-                else
-
-                {
-
-                    load.AssignedPhase = "B";
-
-                    load.PowerB = pVal;
-
-                    load.PowerR = 0;
-
-                    load.PowerY = 0;
-
-                    sumB += pVal;
-
-                }
-
-                load.PowerKW = pVal;
-
+                double p3 = load.PowerKW / 3.0;
+                load.PowerR = p3;
+                load.PowerY = p3;
+                load.PowerB = p3;
+                load.AssignedPhase = "3P";
+                sumR += p3;
+                sumY += p3;
+                sumB += p3;
             }
 
-            // 4. Tính toán lại toàn bộ thông số chọn Aptomat, Cáp, Sụt áp và Vỏ tủ
+            // 3. Sắp xếp phụ tải 1P giảm dần từ lớn đến nhỏ (Thuật toán Greedy LPT)
+            singlePhaseLoads.Sort(delegate(ElectricalLoad a, ElectricalLoad b)
+            {
+                return b.PowerKW.CompareTo(a.PowerKW);
+            });
 
+            // 4. Cân pha thông minh vào pha có tổng công suất nhỏ nhất
+            foreach (ElectricalLoad load in singlePhaseLoads)
+            {
+                double pVal = load.PowerKW;
+                if (pVal <= 0.0001) pVal = 0.5;
+
+                if (sumR <= sumY && sumR <= sumB)
+                {
+                    load.AssignedPhase = "R";
+                    load.PowerR = pVal;
+                    load.PowerY = 0;
+                    load.PowerB = 0;
+                    sumR += pVal;
+                }
+                else if (sumY <= sumR && sumY <= sumB)
+                {
+                    load.AssignedPhase = "Y";
+                    load.PowerY = pVal;
+                    load.PowerR = 0;
+                    load.PowerB = 0;
+                    sumY += pVal;
+                }
+                else
+                {
+                    load.AssignedPhase = "B";
+                    load.PowerB = pVal;
+                    load.PowerR = 0;
+                    load.PowerY = 0;
+                    sumB += pVal;
+                }
+                load.PowerKW = pVal;
+            }
+
+            // 5. Tái sắp xếp danh sách panel.Loads theo chuẩn kỹ thuật: 3P lớn -> 1P -> Dự phòng ở cuối
+            panel.Loads.Clear();
+            int stt = 1;
+            int cIndex = 1;
+
+            foreach (ElectricalLoad l in threePhaseLoads)
+            {
+                l.Stt = stt++;
+                l.CircuitNumber = string.Format("C{0:D2}", cIndex++);
+                panel.Loads.Add(l);
+            }
+
+            foreach (ElectricalLoad l in singlePhaseLoads)
+            {
+                l.Stt = stt++;
+                l.CircuitNumber = string.Format("C{0:D2}", cIndex++);
+                panel.Loads.Add(l);
+            }
+
+            int spareIdx = 1;
+            foreach (ElectricalLoad l in spareLoads)
+            {
+                l.Stt = stt++;
+                l.IsSpare = true;
+                l.CircuitNumber = string.Format("SPARE {0:D2}", spareIdx++);
+                panel.Loads.Add(l);
+            }
+
+            // 6. Tính toán lại toàn bộ thông số
             CalculatePanel(panel);
-
         }
 
         public static double GetPhaseUnbalancePercentage(ElectricalPanel panel)
@@ -898,34 +869,36 @@ namespace TaiAiAddin.Services
 
                 if (!load.IsBreakerUserDefined)
                 {
-                    load.BreakerType = "MCCB 3P";
-                    load.UpdateBreakerSpecFromType(cbRating);
+                    bool isSocket3P = !string.IsNullOrEmpty(load.LoadType) && load.LoadType.Contains("Ổ cắm");
+                    if (isSocket3P)
+                    {
+                        load.BreakerType = "RCBO 4P";
+                        load.UpdateBreakerSpecFromType(Math.Max(20, cbRating));
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(load.BreakerType))
+                        {
+                            load.BreakerType = (cbRating <= 63) ? "MCB 3P" : "MCCB 3P";
+                        }
+                        load.UpdateBreakerSpecFromType(cbRating);
+                    }
                 }
 
                 if (cbRating <= 20) { conductorSize = "2.5"; groundSize = "2.5"; }
-
                 else if (cbRating <= 25) { conductorSize = "4"; groundSize = "4"; }
-
                 else if (cbRating <= 32) { conductorSize = "6"; groundSize = "6"; }
-
                 else if (cbRating <= 50) { conductorSize = "10"; groundSize = "10"; }
-
                 else if (cbRating <= 63) { conductorSize = "16"; groundSize = "16"; }
-
+                else if (cbRating <= 80) { conductorSize = "25"; groundSize = "16"; }
                 else if (cbRating <= 100) { conductorSize = "35"; groundSize = "16"; }
-
                 else if (cbRating <= 125) { conductorSize = "50"; groundSize = "25"; }
-
                 else if (cbRating <= 160) { conductorSize = "70"; groundSize = "35"; }
-
                 else if (cbRating <= 200) { conductorSize = "95"; groundSize = "50"; }
-
                 else if (cbRating <= 250) { conductorSize = "120"; groundSize = "70"; }
-
-                else if (cbRating <= 300) { conductorSize = "185"; groundSize = "95"; }
-
+                else if (cbRating <= 300) { conductorSize = "150"; groundSize = "70"; }
+                else if (cbRating <= 350) { conductorSize = "185"; groundSize = "95"; }
                 else if (cbRating <= 400) { conductorSize = "240"; groundSize = "120"; }
-
                 else { conductorSize = "300"; groundSize = "150"; }
 
             }
@@ -938,8 +911,20 @@ namespace TaiAiAddin.Services
 
                 if (!load.IsBreakerUserDefined)
                 {
-                    load.BreakerType = (cbRating <= 63) ? "MCB 1P" : "MCB 2P";
-                    load.UpdateBreakerSpecFromType(cbRating);
+                    bool isSocket1P = !string.IsNullOrEmpty(load.LoadType) && load.LoadType.Contains("Ổ cắm");
+                    if (isSocket1P)
+                    {
+                        load.BreakerType = "RCBO 2P";
+                        load.UpdateBreakerSpecFromType(Math.Max(20, cbRating));
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(load.BreakerType))
+                        {
+                            load.BreakerType = (cbRating <= 63) ? "MCB 1P" : "MCB 2P";
+                        }
+                        load.UpdateBreakerSpecFromType(cbRating);
+                    }
                 }
 
                 if (cbRating <= 20) { conductorSize = "2.5"; groundSize = "2.5"; }

@@ -75,6 +75,7 @@ namespace TaiAiAddin
                 Application.BeginDoubleClick += OnBeginDoubleClick;
 
                 McpBridgeService.StartServer(5005);
+                SldLocalBridgeService.StartServer(19850);
 
                 Editor ed = Application.DocumentManager.MdiActiveDocument != null ? Application.DocumentManager.MdiActiveDocument.Editor : null;
                 if (ed != null)
@@ -109,6 +110,7 @@ namespace TaiAiAddin
             catch { }
 
             McpBridgeService.StopServer();
+            SldLocalBridgeService.StopServer();
 
             if (_paletteSet != null)
             {
@@ -256,6 +258,13 @@ namespace TaiAiAddin
 
         public static Assembly LoadLatestAssembly()
         {
+            DateTime ignored;
+            return LoadLatestAssembly(out ignored);
+        }
+
+        public static Assembly LoadLatestAssembly(out DateTime dllWriteTimeUtc)
+        {
+            dllWriteTimeUtc = DateTime.MinValue;
             try
             {
                 string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -287,6 +296,7 @@ namespace TaiAiAddin
 
                 if (!string.IsNullOrEmpty(bestDllPath) && File.Exists(bestDllPath))
                 {
+                    dllWriteTimeUtc = latestTime;
                     byte[] rawBytes = File.ReadAllBytes(bestDllPath);
                     return Assembly.Load(rawBytes);
                 }
@@ -306,6 +316,15 @@ namespace TaiAiAddin
         {
             try
             {
+                bool wasLayoutDlgOpen = (_activeLayoutDialog != null && _activeLayoutDialog.IsLoaded);
+                if (wasLayoutDlgOpen)
+                {
+                    try { _activeLayoutDialog.Close(); }
+                    catch { }
+                    _activeLayoutDialog = null;
+                    _activeLayoutDialogDllTime = DateTime.MinValue;
+                }
+
                 if (_paletteSet == null)
                 {
                     _paletteSet = new PaletteSet("NTT TOOLS - Trợ Lý MEP", new Guid("3B1B916A-1B8C-4F7D-B2B2-747A9A167C55"));
@@ -347,6 +366,11 @@ namespace TaiAiAddin
                 }
 
                 _paletteSet.Visible = true;
+
+                if (wasLayoutDlgOpen)
+                {
+                    ShowLayoutProcessorModelessDialog();
+                }
 
                 Editor ed = Application.DocumentManager.MdiActiveDocument != null ? Application.DocumentManager.MdiActiveDocument.Editor : null;
                 if (ed != null)
@@ -1198,112 +1222,83 @@ Application.DocumentManager.MdiActiveDocument.Editor.WriteMessage("\n[TEST] Elec
             CableTrayService.UpdateBlockReferenceDimensions(doc, p);
         }
 
-        #region LỆNH XỬ LÝ MẶT BẰNG (XLMB - Smart Room Boundary)
+        #region XỬ LÝ MẶT BẰNG (TIỀN XỬ LÝ 7 BƯỚC)
+
+        private static System.Windows.Window _activeLayoutDialog = null;
+        private static DateTime _activeLayoutDialogDllTime = DateTime.MinValue;
 
         /// <summary>
-        /// LỆNH XLMB: Tự động quét mặt bằng, xác định grid, tường, cột (bỏ qua nội thất),
-        /// vẽ đường bao phòng (bo tròn tường cong nếu có), nhập lại tên và diện tích.
-        /// Kết thúc bằng câu: "Đã vẽ xong mời bạn Check"
+        /// Mở Dialog Tiền Xử Lý Mặt Bằng dưới dạng MODELESS (không khóa màn hình CAD)
         /// </summary>
-        [CommandMethod("XLMB")]
-        [CommandMethod("NTTXLMB")]
-        [CommandMethod("NTT_XLMB")]
-        [CommandMethod("BAOTATCA")]
-        [CommandMethod("NTTBAOTATCA")]
-        public void XlmbCommand()
+        public static void ShowLayoutProcessorModelessDialog()
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            if (doc == null) return;
-
-            RoomBoundaryOptions opts = (_paletteControl != null) ? _paletteControl.GetXlmbOptions() : new RoomBoundaryOptions();
-
-            RoomBoundaryResult res = SmartRoomBoundaryService.ExecuteRoomBoundary(doc, opts);
-
-            // Cập nhật kết quả lên Palette nếu đang mở
-            if (_paletteControl != null && res != null && res.Success)
+            try
             {
-                _paletteControl.UpdateXlmbResults(res);
+                DateTime latestTime;
+                Assembly latestAsm = LoadLatestAssembly(out latestTime);
+
+                if (_activeLayoutDialog != null && _activeLayoutDialog.IsLoaded)
+                {
+                    if (latestTime <= _activeLayoutDialogDllTime || latestTime == DateTime.MinValue)
+                    {
+                        _activeLayoutDialog.Activate();
+                        if (_activeLayoutDialog.WindowState == System.Windows.WindowState.Minimized)
+                            _activeLayoutDialog.WindowState = System.Windows.WindowState.Normal;
+                        return;
+                    }
+                    try { _activeLayoutDialog.Close(); }
+                    catch { }
+                    _activeLayoutDialog = null;
+                }
+
+                Type dlgType = latestAsm != null ? latestAsm.GetType("TaiAiAddin.Views.CadLayoutProcessorDialog") : null;
+                System.Windows.Window dlg = null;
+                if (dlgType != null)
+                {
+                    dlg = Activator.CreateInstance(dlgType) as System.Windows.Window;
+                }
+                if (dlg == null)
+                {
+                    dlg = new Views.CadLayoutProcessorDialog();
+                }
+                if (dlg != null)
+                {
+                    _activeLayoutDialog = dlg;
+                    _activeLayoutDialogDllTime = latestTime;
+                    dlg.Closed += (s, ev) => { _activeLayoutDialog = null; _activeLayoutDialogDllTime = DateTime.MinValue; };
+
+                    // Mở dạng MODELESS để người dùng vẫn thao tác vẽ, zoom, pan trên CAD tự do
+                    Application.ShowModelessWindow(dlg);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Document doc = Application.DocumentManager.MdiActiveDocument;
+                if (doc != null)
+                {
+                    doc.Editor.WriteMessage("\n[LỖI TIỀN XỬ LÝ] " + ex.Message + "\n");
+                }
             }
         }
 
         /// <summary>
-        /// LỆNH BAOPHONG: Click 1 điểm trong phòng để tự động tìm góc và bo kín phòng hở
+        /// LỆNH XLMB_PREPROCESS / AI_LAYOUT_PROCESSOR / TIENXULYMB: Mở Modeless Dialog Tiền xử lý & Chuẩn hóa Mặt bằng (7 Bước)
         /// </summary>
+        [CommandMethod("AI_LAYOUT_PROCESSOR")]
+        [CommandMethod("XLMB_PREPROCESS")]
+        [CommandMethod("TIENXULYMB")]
+        [CommandMethod("NTT_TIENXULYMB")]
+        [CommandMethod("NTT_XLMB")]
+        [CommandMethod("XLMB")]
+        [CommandMethod("NTTXLMB")]
+        [CommandMethod("BAOTATCA")]
+        [CommandMethod("NTTBAOTATCA")]
         [CommandMethod("BAOPHONG")]
         [CommandMethod("NTTBAOPHONG")]
         [CommandMethod("NTT_BAOPHONG")]
-        public void BaoPhongCommand()
+        public void XlmbPreprocessDialogCommand()
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            if (doc == null) return;
-            Editor ed = doc.Editor;
-
-            PromptPointOptions ppo = new PromptPointOptions("\n[BAOPHONG] Click chọn 1 điểm bên trong phòng cần bo: ");
-            ppo.AllowNone = false;
-            PromptPointResult ppr = ed.GetPoint(ppo);
-            if (ppr.Status != PromptStatus.OK) return;
-
-            RoomBoundaryOptions opts = (_paletteControl != null) ? _paletteControl.GetXlmbOptions() : new RoomBoundaryOptions();
-            opts.PickPoint = new Point2d(ppr.Value.X, ppr.Value.Y);
-
-            RoomBoundaryResult res = SmartRoomBoundaryService.ExecuteRoomBoundary(doc, opts);
-
-            if (_paletteControl != null && res != null && res.Success)
-            {
-                _paletteControl.UpdateXlmbResults(res);
-            }
-        }
-
-        [CommandMethod("XEMPHONG")]
-        [CommandMethod("NTTXEMPHONG")]
-        public void XemPhongCommand()
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            if (doc == null) return;
-            Editor ed = doc.Editor;
-
-            PromptEntityOptions peo = new PromptEntityOptions("\n[XLMB] Chọn đường bao phòng (LWPOLYLINE) để xem thông tin: ");
-            peo.SetRejectMessage("\nChỉ chọn đường bao Polyline!");
-            peo.AddAllowedClass(typeof(Polyline), exactMatch: true);
-
-            PromptEntityResult per = ed.GetEntity(peo);
-            if (per.Status != PromptStatus.OK) return;
-
-            using (doc.LockDocument())
-            using (Transaction tr = doc.Database.TransactionManager.StartTransaction())
-            {
-                Polyline pline = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Polyline;
-                if (pline != null && pline.XData != null)
-                {
-                    ResultBuffer rb = pline.GetXDataForApplication("SMART_ROOM_BOUNDARY");
-                    if (rb != null)
-                    {
-                        var tvs = rb.AsArray();
-                        string code = tvs.Length > 1 ? tvs[1].Value.ToString() : "";
-                        string name = tvs.Length > 2 ? tvs[2].Value.ToString() : "";
-                        double area = tvs.Length > 3 ? Convert.ToDouble(tvs[3].Value) : 0;
-                        double peri = tvs.Length > 4 ? Convert.ToDouble(tvs[4].Value) : 0;
-                        double ceil = tvs.Length > 5 ? Convert.ToDouble(tvs[5].Value) : 2800;
-
-                        string msg = string.Format(
-                            "=== THÔNG TIN PHÒNG (SMART BOUNDARY) ===\n\n" +
-                            "Mã phòng: {0}\n" +
-                            "Tên phòng: {1}\n" +
-                            "Diện tích thông thủy: {2:F2} m²\n" +
-                            "Chu vi: {3:F2} m\n" +
-                            "Cao độ trần: {4:F0} mm\n" +
-                            "Layer: {5}",
-                            code, name, area, peri, ceil, pline.Layer);
-
-                        Application.ShowAlertDialog(msg);
-                    }
-                    else
-                    {
-                        ed.WriteMessage("\n[XLMB] Đối tượng này không có dữ liệu XData 'SMART_ROOM_BOUNDARY'.");
-                    }
-                }
-                tr.Commit();
-            }
+            ShowLayoutProcessorModelessDialog();
         }
 
         #endregion
